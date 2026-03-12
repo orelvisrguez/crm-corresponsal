@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { Corresponsal } from '@prisma/client'
 import { toast } from 'sonner'
-import { Plus, Pencil, Trash2, Globe, Mail, Phone, FileText, Search, Star, ExternalLink, MapPin, Tag } from 'lucide-react'
+import { Plus, Pencil, Trash2, FileText, Search, Star, ExternalLink, MapPin, Tag } from 'lucide-react'
 import { deleteCorresponsal, getCorresponsales } from '@/lib/actions/corresponsales'
 import { CorresponsalDialog } from './CorresponsalDialog'
 import Link from 'next/link'

@@ -2,17 +2,17 @@
 
 import { useState, useEffect, useTransition } from 'react'
 import { 
-  Settings, DollarSign, Bell, Slack, Mail, 
+  Settings, DollarSign, Slack, Mail, 
   Save, Loader2, ShieldCheck, Globe, Info, AlertCircle
 } from 'lucide-react'
 import { getSettings, updateSetting, seedDefaultSettings } from '@/lib/actions/settings'
 import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
+import { Setting } from '@prisma/client'
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState<any[]>([])
+  const [settings, setSettings] = useState<Setting[]>([])
   const [loading, setLoading] = useState(true)
-  const [isPending, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
 
   useEffect(() => {
     fetchSettings()
@@ -23,7 +23,7 @@ export default function SettingsPage() {
       await seedDefaultSettings() // Ensure we have defaults
       const data = await getSettings()
       setSettings(data)
-    } catch (err) {
+    } catch {
       toast.error('Error al cargar ajustes')
     } finally {
       setLoading(false)
@@ -36,13 +36,14 @@ export default function SettingsPage() {
         await updateSetting(key, value)
         setSettings(prev => prev.map(s => s.key === key ? { ...s, value } : s))
         toast.success(`Ajuste '${key}' actualizado`)
-      } catch (err: any) {
-        toast.error(err.message)
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Error desconocido'
+        toast.error(message)
       }
     })
   }
 
-  const renderSettingInput = (s: any) => {
+  const renderSettingInput = (s: Setting) => {
     const isFinancial = s.group === 'financial'
     const isIntegration = s.group === 'integration'
 

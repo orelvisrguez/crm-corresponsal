@@ -36,7 +36,7 @@ export default function LoginPage() {
         router.push('/')
         router.refresh()
       }
-    } catch (error) {
+    } catch {
       toast.error('Ocurrió un error inesperado')
     } finally {
       setIsLoading(false)
@@ -98,7 +98,7 @@ export default function LoginPage() {
         </CardContent>
         <CardFooter className="flex flex-col border-t border-border/40 bg-muted/20 py-6">
           <p className="text-xs text-center text-muted-foreground italic">
-            "Seguridad y eficiencia en la gestión de asistencias mé́dicas"
+            &quot;Seguridad y eficiencia en la gestión de asistencias médicas&quot;
           </p>
         </CardFooter>
       </Card>

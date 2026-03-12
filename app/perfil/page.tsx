@@ -5,6 +5,7 @@ import { getCurrentUser, updateProfile } from '@/lib/actions/users'
 import { User, Mail, Shield, ShieldCheck, ShieldAlert, Save, Loader2, Calendar } from 'lucide-react'
 import { cn, formatDate } from '@/lib/utils'
 import { toast } from 'sonner'
+import { Profile } from '@prisma/client'
 
 const ROLE_LABELS = {
   admin: 'Administrador',
@@ -19,15 +20,17 @@ const ROLE_COLORS = {
 }
 
 export default function ProfilePage() {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<{ email: string; profile: Profile } | null>(null)
   const [nombre, setNombre] = useState('')
   const [isPending, startTransition] = useTransition()
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     getCurrentUser().then(u => {
-      setUser(u)
-      setNombre(u?.profile?.nombreCompleto || '')
+      if (u) {
+        setUser(u as { email: string; profile: Profile })
+        setNombre(u.profile?.nombreCompleto || '')
+      }
       setIsLoading(false)
     })
   }, [])
@@ -41,8 +44,9 @@ export default function ProfilePage() {
         await updateProfile({ nombreCompleto: nombre.trim() })
         toast.success('Perfil actualizado correctamente')
         // Refresh local state or just trust the revalidate
-      } catch (err: any) {
-        toast.error('Error al actualizar perfil', { description: err.message })
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Error desconocido'
+        toast.error('Error al actualizar perfil', { description: message })
       }
     })
   }

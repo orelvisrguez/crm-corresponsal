@@ -1,8 +1,6 @@
 'use client'
 
 import { 
-  PieChart,
-  Pie,
   AreaChart, 
   Area, 
   BarChart, 
@@ -17,30 +15,29 @@ import {
   ResponsiveContainer, 
   Cell,
   Legend,
-  Treemap,
-  TooltipProps
+  TooltipContentProps
 } from 'recharts'
 import { DashboardAnalytics } from '@/lib/actions/analytics'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { formatCurrency, cn } from '@/lib/utils'
+import { formatCurrency } from '@/lib/utils'
 
 interface Props {
   data: DashboardAnalytics
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: Partial<TooltipContentProps<number, string>>) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-card border border-border p-3 rounded-lg shadow-xl">
         <p className="text-xs font-bold text-muted-foreground uppercase mb-2">{label}</p>
         <div className="space-y-1">
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry, index) => (
             <div key={index} className="flex items-center justify-between gap-4">
               <span className="text-xs flex items-center gap-1.5 font-medium">
                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
                 {entry.name}:
               </span>
-              <span className="text-sm font-bold">{formatCurrency(entry.value)}</span>
+              <span className="text-sm font-bold">{formatCurrency(entry.value as number)}</span>
             </div>
           ))}
         </div>
@@ -361,7 +358,7 @@ export function AnalyticsCharts({ data }: Props) {
         </CardHeader>
         <CardContent className="pt-6">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {data.topCountries.map((country, index) => {
+            {data.topCountries.map((country) => {
               const maxCost = data.topCountries[0].cost;
               const intensity = country.cost / maxCost;
               const opacity = 0.2 + (intensity * 0.8);

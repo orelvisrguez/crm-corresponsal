@@ -1,20 +1,13 @@
-import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { 
-  ArrowLeft, 
   MapPin, 
   Globe, 
   Mail, 
   Star, 
-  Calendar, 
-  FileText, 
   DollarSign,
   TrendingUp,
-  Clock,
-  Printer,
   ChevronRight,
-  TrendingDown,
   AlertCircle,
   Briefcase
 } from 'lucide-react'
@@ -22,7 +15,6 @@ import { getCorresponsal, getCorresponsalStats } from '@/lib/actions/corresponsa
 import { getCasos } from '@/lib/actions/casos'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { cn, formatCurrency, formatDate, ESTADO_CASO_ROW_COLORS } from '@/lib/utils'
 
 import { CorresponsalDetailHeader } from './_components/CorresponsalDetailHeader'
@@ -60,7 +52,7 @@ export default async function CorresponsalDetailPage({ params }: PageProps) {
                 <h1 className="text-4xl font-black tracking-tight text-foreground">{corresponsal.nombre}</h1>
                 <Badge variant="secondary" className="bg-amber-500/10 text-amber-500 border-amber-500/20 px-4 py-1.5 text-xs font-bold gap-2 flex rounded-full">
                   <Star className="w-4 h-4 fill-current px-0" />
-                  {(corresponsal as any).calificacion || 3}/5 Confiabilidad
+                  {corresponsal.calificacion || 3}/5 Confiabilidad
                 </Badge>
               </div>
               <div className="flex flex-wrap gap-x-6 gap-y-2 text-muted-foreground">
@@ -74,22 +66,22 @@ export default async function CorresponsalDetailPage({ params }: PageProps) {
                     {corresponsal.email}
                   </div>
                 )}
-                {(corresponsal as any).sitioWeb && (
+                {corresponsal.sitioWeb && (
                   <div className="flex items-center gap-1.5 text-sm font-medium hover:text-primary cursor-pointer transition-colors">
                     <Globe className="w-4 h-4 text-primary/60" />
-                    {(corresponsal as any).sitioWeb}
+                    {corresponsal.sitioWeb}
                   </div>
                 )}
               </div>
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {((corresponsal as any).especialidades || []).map((esp: string) => (
+              {(corresponsal.especialidades || []).map((esp: string) => (
                 <Badge key={esp} variant="outline" className="rounded-xl px-4 py-1 text-xs font-bold bg-primary/5 border-primary/20 text-primary uppercase tracking-wider">
                   {esp}
                 </Badge>
               ))}
-              {((corresponsal as any).especialidades || []).length === 0 && (
+              {(corresponsal.especialidades || []).length === 0 && (
                 <span className="text-xs text-muted-foreground italic">Sin especialidades registradas</span>
               )}
             </div>
@@ -198,12 +190,12 @@ export default async function CorresponsalDetailPage({ params }: PageProps) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/40">
-                    {recentCasos.map((caso: any) => (
+                    {recentCasos.map((caso) => (
                       <tr 
                         key={caso.id} 
                         className={cn(
                           "hover:bg-primary/[0.02] transition-colors text-sm group border-b border-border/40",
-                          ESTADO_CASO_ROW_COLORS[caso.estadoCaso]
+                          ESTADO_CASO_ROW_COLORS[caso.estadoCaso as keyof typeof ESTADO_CASO_ROW_COLORS]
                         )}
                       >
                         <td className="px-8 py-5 font-black text-primary group-hover:translate-x-1 transition-transform cursor-pointer">
@@ -262,7 +254,7 @@ export default async function CorresponsalDetailPage({ params }: PageProps) {
             </div>
             <CardContent className="p-8">
               <div className="bg-muted/30 p-8 rounded-3xl border-2 border-dashed border-border/50 italic text-sm text-foreground/80 leading-relaxed font-medium">
-                {(corresponsal as any).notasInternas || 'No hay notas internas registradas sobre el desempeño de este socio.'}
+                {corresponsal.notasInternas || 'No hay notas internas registradas sobre el desempeño de este socio.'}
               </div>
             </CardContent>
           </Card>
@@ -277,22 +269,22 @@ export default async function CorresponsalDetailPage({ params }: PageProps) {
             <CardContent className="p-8 space-y-8">
               <div className="space-y-2">
                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Tax ID / RUC</p>
-                <p className="text-sm font-black text-foreground">{(corresponsal as any).taxId || '---'}</p>
+                <p className="text-sm font-black text-foreground">{corresponsal.taxId || '---'}</p>
               </div>
               <div className="space-y-2">
                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Dirección Comercial</p>
-                <p className="text-sm font-medium leading-relaxed text-foreground/80">{(corresponsal as any).direccionOficina || 'Dirección no especificada'}</p>
+                <p className="text-sm font-medium leading-relaxed text-foreground/80">{corresponsal.direccionOficina || 'Dirección no especificada'}</p>
               </div>
               
               <div className="pt-6 border-t border-border space-y-4">
                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Cobertura Geográfica</p>
                 <div className="flex flex-wrap gap-2">
-                  {((corresponsal as any).ciudadesCobertura || []).map((city: string) => (
+                  {(corresponsal.ciudadesCobertura || []).map((city: string) => (
                     <Badge key={city} variant="secondary" className="text-[10px] font-bold py-1 px-3 rounded-lg border-primary/10">
                       {city}
                     </Badge>
                   ))}
-                  {((corresponsal as any).ciudadesCobertura || []).length === 0 && (
+                  {(corresponsal.ciudadesCobertura || []).length === 0 && (
                     <div className="flex items-center gap-2 text-xs text-muted-foreground italic bg-muted p-2 rounded-xl w-full">
                       <Globe className="w-3.5 h-3.5" />
                       Operativa nacional: {corresponsal.pais}
@@ -301,11 +293,11 @@ export default async function CorresponsalDetailPage({ params }: PageProps) {
                 </div>
               </div>
 
-              {(corresponsal as any).contactos && (corresponsal as any).contactos.length > 0 && (
+              {corresponsal.contactos && Array.isArray(corresponsal.contactos) && (corresponsal.contactos as unknown[]).length > 0 && (
                 <div className="pt-6 border-t border-border space-y-4">
                   <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Contactos Adicionales</p>
                   <div className="space-y-3">
-                    {((corresponsal as any).contactos as any[]).map((c: any, i: number) => (
+                    {((corresponsal.contactos as unknown) as {nombre: string, cargo: string, email: string}[]).map((c, i) => (
                       <div key={i} className="p-4 bg-muted/40 rounded-2xl border border-border/50">
                         <p className="text-xs font-black text-foreground">{c.nombre}</p>
                         <p className="text-[10px] text-muted-foreground font-bold uppercase">{c.cargo}</p>

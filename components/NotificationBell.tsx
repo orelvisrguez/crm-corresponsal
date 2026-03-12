@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { Bell, Check, Info, AlertTriangle, AlertCircle, X } from 'lucide-react'
 import { getNotifications, markAsRead, markAllAsRead, syncAlerts } from '@/lib/actions/notifications'
 import { Notification } from '@prisma/client'
-import { cn } from '@/lib/utils'
 import Link from 'next/link'
 
 export function NotificationBell() {

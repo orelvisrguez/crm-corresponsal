@@ -1,7 +1,6 @@
 'use server'
 
 import { prisma } from '@/lib/prisma'
-import { startOfMonth, subMonths, endOfMonth } from 'date-fns'
 
 // Temporary interface until prisma generate succeeds
 export interface Report {
@@ -17,7 +16,6 @@ export type ReportType = 'economico' | 'operativo' | 'financiero' | 'contable'
 
 export async function getExecutiveReportData() {
   const now = new Date()
-  const last6Months = startOfMonth(subMonths(now, 5))
 
   const [casos, corresponsales] = await Promise.all([
     prisma.caso.findMany({
@@ -30,16 +28,16 @@ export async function getExecutiveReportData() {
 
   // Aggregated stats for the AI
   const totalCasos = casos.length
-  const casosAbiertos = casos.filter((c: any) => c.estadoInterno === 'Abierto').length
-  const costoTotalUsd = casos.reduce((acc: number, c: any) => acc + (c.costoUsd || 0), 0)
-  const feeTotalUsd = casos.reduce((acc: number, c: any) => acc + (c.costoFee || 0), 0)
+  const casosAbiertos = casos.filter((c) => c.estadoInterno === 'Abierto').length
+  const costoTotalUsd = casos.reduce((acc: number, c) => acc + (c.costoUsd || 0), 0)
+  const feeTotalUsd = casos.reduce((acc: number, c) => acc + (c.costoFee || 0), 0)
   
   const topCorresponsales = corresponsales
-    .sort((a: any, b: any) => b._count.casos - a._count.casos)
+    .sort((a, b) => (b._count?.casos || 0) - (a._count?.casos || 0))
     .slice(0, 5)
-    .map((c: any) => ({ nombre: c.nombre, casos: c._count.casos }))
+    .map((c) => ({ nombre: c.nombre, casos: c._count?.casos || 0 }))
 
-  const countries = [...new Set(casos.map((c: any) => c.pais).filter(Boolean))] as string[]
+  const countries = [...new Set(casos.map((c) => c.pais).filter(Boolean))] as string[]
   
   return {
     summary: {
@@ -131,9 +129,10 @@ export async function generateAIReport(type: ReportType) {
     }
 
     return { content: text }
-  } catch (error) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Error desconocido'
     console.error('Report Error:', error)
-    return { error: 'Error de conexión con el servicio de IA.' }
+    return { error: `La IA no pudo generar el informe: ${message}` }
   }
 }
 
@@ -163,7 +162,7 @@ export async function saveReport(data: { tipo: string, titulo: string, contenido
     )
     
     return { success: true, report: { id, ...data, createdAt: now, updatedAt: now } }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Save Report Error:', error)
     return { success: false, error: 'Error al guardar el informe en la base de datos' }
   }
@@ -173,7 +172,7 @@ export async function getSavedReports() {
   try {
     const reports = await prisma.$queryRawUnsafe('SELECT * FROM "reports" ORDER BY "createdAt" DESC')
     return reports as Report[]
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Get Reports Error:', error)
     return []
   }
@@ -183,7 +182,7 @@ export async function deleteReport(id: string) {
   try {
     await prisma.$executeRawUnsafe('DELETE FROM "reports" WHERE "id" = $1', id)
     return { success: true }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Delete Report Error:', error)
     return { success: false, error: 'Error al eliminar el informe' }
   }

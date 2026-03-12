@@ -1,5 +1,5 @@
 import { ReportGenerator } from './_components/ReportGenerator'
-import { FileText, Sparkles } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
 
 export default function InformesPage() {
   return (

@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { casoSchema, CasoFormData } from '@/lib/validations'
-import { EstadoInterno, EstadoCaso, UserRole } from '@prisma/client'
+import { EstadoInterno, EstadoCaso } from '@prisma/client'
 import { getCurrentUser, checkRole } from '@/lib/actions/users'
 
 export interface CasosFilter {
@@ -78,7 +78,7 @@ export async function updateCaso(id: number, data: CasoFormData) {
   })
 
   // Log changes
-  const logs = []
+  const logs: { tipo: string; valorAnterior?: string; valorNuevo?: string }[] = []
   
   const fieldsToLog = [
     { key: 'estadoInterno', label: 'ESTADO_INTERNO' },
@@ -89,11 +89,11 @@ export async function updateCaso(id: number, data: CasoFormData) {
     { key: 'pais', label: 'PAIS' },
     { key: 'costoUsd', label: 'COSTO_USD' },
     { key: 'costoFee', label: 'COSTO_FEE' },
-  ]
+  ] as const
 
   fieldsToLog.forEach(({ key, label }) => {
-    const oldVal = String((existing as any)[key] ?? '')
-    const newVal = String((validated as any)[key] ?? '')
+    const oldVal = String(existing[key as keyof typeof existing] ?? '')
+    const newVal = String(validated[key as keyof typeof validated] ?? '')
     
     if (oldVal !== newVal) {
       logs.push({

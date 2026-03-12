@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useState, useTransition, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Caso, Corresponsal } from '@prisma/client'
@@ -152,21 +152,7 @@ export function CasoDialog({ open, onClose, caso, corresponsales, onSuccess }: P
   const currentPais = watch('pais')
   const logicalSum = (costUsd || 0) + (costFee || 0) + (montoAg || 0)
 
-  // Auto-fetch exchange rate when country changes
-  useEffect(() => {
-    if (currentPais && !isEdit) {
-      handleFetchRate(currentPais)
-    }
-  }, [currentPais, isEdit])
-
-  // Auto-calculate local currency when USD or rate changes
-  useEffect(() => {
-    const usd = parseFloat(String(costUsd)) || 0
-    setValue('costoMonedaLocal', parseFloat((usd * tipoCambio).toFixed(2)))
-    setValue('tasaCambio', tipoCambio)
-  }, [costUsd, tipoCambio, setValue])
-
-  const handleFetchRate = async (pais: string) => {
+  const handleFetchRate = useCallback(async (pais: string) => {
     setIsFetchingRate(true)
     try {
       const result = await getExchangeRate(pais)
@@ -181,13 +167,21 @@ export function CasoDialog({ open, onClose, caso, corresponsales, onSuccess }: P
     } finally {
       setIsFetchingRate(false)
     }
-  }
+  }, [setValue])
 
-  const calcularMonedaLocal = () => {
+  // Auto-fetch exchange rate when country changes
+  useEffect(() => {
+    if (currentPais && !isEdit) {
+      handleFetchRate(currentPais)
+    }
+  }, [currentPais, isEdit, handleFetchRate])
+
+  // Auto-calculate local currency when USD or rate changes
+  useEffect(() => {
     const usd = parseFloat(String(costUsd)) || 0
     setValue('costoMonedaLocal', parseFloat((usd * tipoCambio).toFixed(2)))
     setValue('tasaCambio', tipoCambio)
-  }
+  }, [costUsd, tipoCambio, setValue])
 
   const onSubmit = (data: CasoFormData) => {
     startTransition(async () => {

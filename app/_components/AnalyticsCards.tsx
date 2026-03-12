@@ -31,7 +31,7 @@ function MetricCard({
   title: string
   value: string | number
   description: string
-  icon: any
+  icon: React.ElementType
   trend?: number
   trendType?: 'positive' | 'negative'
   color?: 'primary' | 'emerald' | 'amber' | 'blue' | 'rose'

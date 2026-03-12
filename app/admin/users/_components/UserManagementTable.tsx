@@ -2,8 +2,8 @@
 
 import { useState, useTransition } from 'react'
 import { Profile, UserRole, UserStatus } from '@prisma/client'
-import { Shield, ShieldAlert, ShieldCheck, MoreHorizontal, UserCog, Power, UserMinus } from 'lucide-react'
-import { cn, formatDate } from '@/lib/utils'
+import { Shield, ShieldAlert, ShieldCheck, MoreHorizontal, Power } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { updateUser } from '@/lib/actions/users'
 import { toast } from 'sonner'
 import {
@@ -22,14 +22,14 @@ const ROLE_LABELS: Record<UserRole, string> = {
   visor: 'Visor',
 }
 
-const ROLE_ICONS: Record<UserRole, any> = {
+const ROLE_ICONS: Record<UserRole, React.ElementType> = {
   admin: ShieldAlert,
   operador: ShieldCheck,
   visor: Shield,
 }
 
-export function UserManagementTable({ initialUsers }: { initialUsers: any[] }) {
-  const [users, setUsers] = useState(initialUsers)
+export function UserManagementTable({ initialUsers }: { initialUsers: Profile[] }) {
+  const [users, setUsers] = useState<Profile[]>(initialUsers)
   const [isPending, startTransition] = useTransition()
 
   const handleUpdate = (userId: string, data: { rol?: UserRole; estado?: UserStatus }) => {
@@ -40,8 +40,9 @@ export function UserManagementTable({ initialUsers }: { initialUsers: any[] }) {
         toast.success('Usuario actualizado', {
           description: `El ${data.rol ? 'rol' : 'estado'} ha sido modificado correctamente.`
         })
-      } catch (err: any) {
-        toast.error('Error al actualizar', { description: err.message })
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Error desconocido'
+        toast.error('Error al actualizar', { description: message })
       }
     })
   }

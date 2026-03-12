@@ -1,6 +1,5 @@
 import { getUsers, getCurrentUser } from '@/lib/actions/users'
 import { redirect } from 'next/navigation'
-import { UserRole, UserStatus } from '@prisma/client'
 import { UserManagementTable } from './_components/UserManagementTable'
 import { AdminUsersHeader } from './_components/AdminUsersHeader'
 

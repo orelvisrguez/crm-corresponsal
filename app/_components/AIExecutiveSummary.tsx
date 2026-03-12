@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Sparkles, BrainCircuit, RefreshCw } from 'lucide-react'
 import { getAIInsights, DashboardAnalytics } from '@/lib/actions/analytics'
 import { cn } from '@/lib/utils'
@@ -13,7 +13,7 @@ export function AIExecutiveSummary({ data }: Props) {
   const [insight, setInsight] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  const fetchInsights = async () => {
+  const fetchInsights = useCallback(async () => {
     setLoading(true)
     try {
       const text = await getAIInsights(data)
@@ -21,11 +21,11 @@ export function AIExecutiveSummary({ data }: Props) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [data])
 
   useEffect(() => {
     fetchInsights()
-  }, [data])
+  }, [fetchInsights])
 
   return (
     <div className="relative group">

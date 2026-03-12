@@ -39,7 +39,6 @@ export interface DashboardAnalytics {
 
 export async function getDashboardAnalytics(dateRange?: { from: Date; to: Date }) {
   const now = new Date()
-  const currentMonthStart = startOfMonth(now)
   const lastMonthStart = startOfMonth(subMonths(now, 1))
   
   const where = dateRange ? {
@@ -68,27 +67,27 @@ export async function getDashboardAnalytics(dateRange?: { from: Date; to: Date }
   })
 
   // 1. Operational Metrics
-  const closedCasos = allCasos.filter((c: any) => c.estadoInterno === 'Cerrado' && c.fechaInicio)
+  const closedCasos = allCasos.filter((c) => c.estadoInterno === 'Cerrado' && c.fechaInicio)
   const avgResolutionDays = closedCasos.length > 0
-    ? closedCasos.reduce((acc: number, c: any) => acc + differenceInDays(new Date(c.updatedAt), new Date(c.fechaInicio!)), 0) / closedCasos.length
+    ? closedCasos.reduce((acc: number, c) => acc + differenceInDays(new Date(c.updatedAt), new Date(c.fechaInicio!)), 0) / closedCasos.length
     : 0
 
-  const casesWithReport = allCasos.filter((c: any) => c.informeMedico).length
+  const casesWithReport = allCasos.filter((c) => c.informeMedico).length
   const documentationRate = allCasos.length > 0 ? (casesWithReport / allCasos.length) * 100 : 0
 
-  const agingCases15 = allCasos.filter((c: any) => c.estadoInterno !== 'Cerrado' && c.fechaInicio && differenceInDays(now, new Date(c.fechaInicio)) > 15).length
-  const agingCases30 = allCasos.filter((c: any) => c.estadoInterno !== 'Cerrado' && c.fechaInicio && differenceInDays(now, new Date(c.fechaInicio)) > 30).length
+  const agingCases15 = allCasos.filter((c) => c.estadoInterno !== 'Cerrado' && c.fechaInicio && differenceInDays(now, new Date(c.fechaInicio)) > 15).length
+  const agingCases30 = allCasos.filter((c) => c.estadoInterno !== 'Cerrado' && c.fechaInicio && differenceInDays(now, new Date(c.fechaInicio)) > 30).length
 
   // 2. Financial Metrics
-  const totalRevenue = allCasos.reduce((acc: number, c: any) => acc + (c.costoUsd || 0) + (c.costoFee || 0), 0)
+  const totalRevenue = allCasos.reduce((acc: number, c) => acc + (c.costoUsd || 0) + (c.costoFee || 0), 0)
   const avgTicket = allCasos.length > 0 ? totalRevenue / allCasos.length : 0
   
   const pendingCollection = allCasos
-    .filter((c: any) => c.estadoCaso === 'ParaRefacturar' || c.estadoCaso === 'Refacturado')
-    .reduce((acc: number, c: any) => acc + (c.costoUsd || 0) + (c.costoFee || 0), 0)
+    .filter((c) => c.estadoCaso === 'ParaRefacturar' || c.estadoCaso === 'Refacturado')
+    .reduce((acc: number, c) => acc + (c.costoUsd || 0) + (c.costoFee || 0), 0)
     
-  const totalCostoUsd = allCasos.reduce((acc: number, c: any) => acc + (c.costoUsd || 0), 0)
-  const totalFee = allCasos.reduce((acc: number, c: any) => acc + (c.costoFee || 0), 0)
+  const totalCostoUsd = allCasos.reduce((acc: number, c) => acc + (c.costoUsd || 0), 0)
+  const totalFee = allCasos.reduce((acc: number, c) => acc + (c.costoFee || 0), 0)
   const feeMargin = totalCostoUsd > 0 ? (totalFee / totalCostoUsd) * 100 : 0
 
   // Growth (MoM) - This requires fetching last month data if not range filtered
@@ -103,21 +102,21 @@ export async function getDashboardAnalytics(dateRange?: { from: Date; to: Date }
       },
       select: { costoUsd: true, costoFee: true }
     })
-    const lastMonthRevenue = lastMonthCasos.reduce((acc: number, c: any) => acc + (c.costoUsd || 0) + (c.costoFee || 0), 0)
+    const lastMonthRevenue = lastMonthCasos.reduce((acc: number, c) => acc + (c.costoUsd || 0) + (c.costoFee || 0), 0)
     revenueGrowth = lastMonthRevenue > 0 ? ((totalRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 : 0
   }
 
   // 3. Pipeline & Funnel
   const funnel = {
-    abierto: allCasos.filter((c: any) => c.estadoInterno === 'Abierto').length,
-    ongoing: allCasos.filter((c: any) => c.estadoCaso === 'OnGoing').length,
-    toInvoice: allCasos.filter((c: any) => c.estadoCaso === 'ParaRefacturar' || c.estadoCaso === 'Refacturado').length,
-    collected: allCasos.filter((c: any) => c.estadoCaso === 'Cobrado').length
+    abierto: allCasos.filter((c) => c.estadoInterno === 'Abierto').length,
+    ongoing: allCasos.filter((c) => c.estadoCaso === 'OnGoing').length,
+    toInvoice: allCasos.filter((c) => c.estadoCaso === 'ParaRefacturar' || c.estadoCaso === 'Refacturado').length,
+    collected: allCasos.filter((c) => c.estadoCaso === 'Cobrado').length
   }
 
   // 4. Top Countries
   const countryMap: Record<string, number> = {}
-  allCasos.forEach((c: any) => {
+  allCasos.forEach((c) => {
     if (c.pais) {
       countryMap[c.pais] = (countryMap[c.pais] || 0) + (c.costoUsd || 0)
     }
@@ -128,7 +127,7 @@ export async function getDashboardAnalytics(dateRange?: { from: Date; to: Date }
     .slice(0, 5)
 
   // 5. Monthly Trend (last 6 months from the latest case or now)
-  const latestCase = allCasos.length > 0 ? allCasos.reduce((max: Date, c: any) => {
+  const latestCase = allCasos.length > 0 ? allCasos.reduce((max: Date, c) => {
     const d = c.fechaInicio ? new Date(c.fechaInicio) : new Date(0);
     return d > max ? d : max;
   }, new Date(0)) : now;
@@ -139,13 +138,13 @@ export async function getDashboardAnalytics(dateRange?: { from: Date; to: Date }
   for (let i = 5; i >= 0; i--) {
     const mStart = startOfMonth(subMonths(referenceDate, i))
     const mEnd = endOfMonth(subMonths(referenceDate, i))
-    const mCasos = allCasos.filter((c: any) => c.fechaInicio && new Date(c.fechaInicio) >= mStart && new Date(c.fechaInicio) <= mEnd)
+    const mCasos = allCasos.filter((c) => c.fechaInicio && new Date(c.fechaInicio) >= mStart && new Date(c.fechaInicio) <= mEnd)
     
     monthlyTrend.push({
       month: mStart.toLocaleString('default', { month: 'short' }),
       year: mStart.getFullYear(),
-      costUsd: mCasos.reduce((acc: number, c: any) => acc + (c.costoUsd || 0), 0),
-      fee: mCasos.reduce((acc: number, c: any) => acc + (c.costoFee || 0), 0)
+      costUsd: mCasos.reduce((acc: number, c) => acc + (c.costoUsd || 0), 0),
+      fee: mCasos.reduce((acc: number, c) => acc + (c.costoFee || 0), 0)
     })
   }
 
@@ -155,9 +154,9 @@ export async function getDashboardAnalytics(dateRange?: { from: Date; to: Date }
   const lastMonthStartRef = startOfMonth(subMonths(referenceDate, 1))
   
   for (let i = 1; i <= 31; i++) {
-    const dayCasos = allCasos.filter((c: any) => c.fechaInicio && new Date(c.fechaInicio).getDate() === i)
-    const current = dayCasos.filter((c: any) => new Date(c.fechaInicio!) >= currentMonthStartRef && new Date(c.fechaInicio!) <= endOfMonth(currentMonthStartRef)).length
-    const previous = allCasos.filter((c: any) => c.fechaInicio && new Date(c.fechaInicio).getDate() === i && new Date(c.fechaInicio) >= lastMonthStartRef && new Date(c.fechaInicio) <= endOfMonth(lastMonthStartRef)).length
+    const dayCasos = allCasos.filter((c) => c.fechaInicio && new Date(c.fechaInicio).getDate() === i)
+    const current = dayCasos.filter((c) => new Date(c.fechaInicio!) >= currentMonthStartRef && new Date(c.fechaInicio!) <= endOfMonth(currentMonthStartRef)).length
+    const previous = allCasos.filter((c) => c.fechaInicio && new Date(c.fechaInicio).getDate() === i && new Date(c.fechaInicio) >= lastMonthStartRef && new Date(c.fechaInicio) <= endOfMonth(lastMonthStartRef)).length
     
     if (i <= new Date(endOfMonth(currentMonthStartRef)).getDate() || i <= new Date(endOfMonth(lastMonthStartRef)).getDate()) {
       momVolume.push({ day: i.toString(), current, previous })
@@ -166,7 +165,7 @@ export async function getDashboardAnalytics(dateRange?: { from: Date; to: Date }
 
   // 7. Pareto Data
   const corMap: Record<string, number> = {}
-  allCasos.forEach((c: any) => {
+  allCasos.forEach((c) => {
     const name = c.corresponsal?.nombre || 'Unknown'
     corMap[name] = (corMap[name] || 0) + 1
   })
@@ -190,9 +189,9 @@ export async function getDashboardAnalytics(dateRange?: { from: Date; to: Date }
     operational: { avgResolutionDays, documentationRate, agingCases15, agingCases30 },
     financial: { avgTicket, totalRevenue, revenueGrowth, pendingCollection, feeMargin },
     pipeline: { 
-      onGoing: allCasos.filter((c: any) => c.estadoCaso === 'OnGoing').reduce((acc: number, c: any) => acc + (c.costoUsd || 0), 0),
+      onGoing: allCasos.filter((c) => c.estadoCaso === 'OnGoing').reduce((acc: number, c) => acc + (c.costoUsd || 0), 0),
       toInvoice: pendingCollection,
-      collected: allCasos.filter((c: any) => c.estadoCaso === 'Cobrado').reduce((acc: number, c: any) => acc + (c.costoUsd || 0), 0)
+      collected: allCasos.filter((c) => c.estadoCaso === 'Cobrado').reduce((acc: number, c) => acc + (c.costoUsd || 0), 0)
     },
     funnel,
     topCountries,
@@ -200,7 +199,7 @@ export async function getDashboardAnalytics(dateRange?: { from: Date; to: Date }
     concentration: await getParetoAnalytics(allCasos),
     momVolume,
     pareto,
-    mapData: allCasos.filter((c: any) => c.pais && COUNTRY_COORDS[c.pais]).map((c: any) => ({
+    mapData: allCasos.filter((c) => c.pais && COUNTRY_COORDS[c.pais]).map((c) => ({
       id: c.id,
       lat: (COUNTRY_COORDS[c.pais!] as [number, number])[0],
       lng: (COUNTRY_COORDS[c.pais!] as [number, number])[1],
@@ -211,7 +210,7 @@ export async function getDashboardAnalytics(dateRange?: { from: Date; to: Date }
   }
 }
 
-async function getParetoAnalytics(casos: any[]) {
+async function getParetoAnalytics(casos: { corresponsal: { nombre: string } | null }[]) {
   const corMap: Record<string, number> = {}
   casos.forEach(c => {
     const name = c.corresponsal?.nombre || 'Unknown'

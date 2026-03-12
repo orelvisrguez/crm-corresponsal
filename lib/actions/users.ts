@@ -93,9 +93,9 @@ export async function createAdminUser(data: { email: string, nombreCompleto: str
     throw new Error('No autorizado')
   }
 
-  // NOTE: This usually requires SUPABASE_SERVICE_ROLE_KEY to bypass email confirmation
-  // or use supabase.auth.admin.inviteUserByEmail.
-  // For now, we only create the profile and suggest the key is needed.
+  // For now, we only create the profile if we can.
+  // In a real scenario, we'd use supabase.auth.admin.createUser or similar.
+  // This requires SUPABASE_SERVICE_ROLE_KEY which shouldn't be in the client.
   
   throw new Error('La creación directa de usuarios requiere configurar la KEY de servicio de Supabase para omitir la confirmación de email.')
 }

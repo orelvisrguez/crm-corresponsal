@@ -19,7 +19,7 @@ export async function importCasosFromExcel(formData: FormData) {
     if (!sheetName) throw new Error('El archivo Excel no tiene hojas.')
     
     const sheet = workbook.Sheets[sheetName]
-    const data = xlsx.utils.sheet_to_json<any>(sheet)
+    const data = xlsx.utils.sheet_to_json<Record<string, unknown>>(sheet)
     
     if (data.length === 0) throw new Error('El archivo Excel está vacío.')
 
@@ -73,7 +73,7 @@ export async function importCasosFromExcel(formData: FormData) {
       const estadoCaso = estadoCasoMap[ecRaw] || 'NoFee'
 
       // Dates parsing (handling native JS dates from xlsx or strings)
-      const parseDate = (val: any) => {
+      const parseDate = (val: unknown) => {
         if (!val) return null
 
         let d: Date | null = null
@@ -90,7 +90,7 @@ export async function importCasosFromExcel(formData: FormData) {
             d = new Date(val)
           }
         } else {
-          d = new Date(val)
+          d = new Date(String(val))
         }
 
         if (d && !isNaN(d.getTime())) {
@@ -109,10 +109,10 @@ export async function importCasosFromExcel(formData: FormData) {
         idCasoCorresponsal: row.IdCasoCorresponsal ? String(row.IdCasoCorresponsal) : null,
         fechaInicio: parseDate(row.FechaInicio),
         pais: row.Pais ? String(row.Pais) : null,
-        costoFee: row.CostoFee ? parseFloat(row.CostoFee) : 0,
-        costoUsd: row.CostoUsd ? parseFloat(row.CostoUsd) : 0,
-        montoAgregado: row.MontoAgregado ? parseFloat(row.MontoAgregado) : 0,
-        costoMonedaLocal: row.CostoMonedaLocal ? parseFloat(row.CostoMonedaLocal) : 0,
+        costoFee: row.CostoFee ? parseFloat(String(row.CostoFee)) : 0,
+        costoUsd: row.CostoUsd ? parseFloat(String(row.CostoUsd)) : 0,
+        montoAgregado: row.MontoAgregado ? parseFloat(String(row.MontoAgregado)) : 0,
+        costoMonedaLocal: row.CostoMonedaLocal ? parseFloat(String(row.CostoMonedaLocal)) : 0,
         simboloMonedaLocal: row.SimboloMonedaLocal ? String(row.SimboloMonedaLocal) : null,
         informeMedico: String(row.InformeMedico).toLowerCase() === 'si' || String(row.InformeMedico).toLowerCase() === 'true',
         tieneFactura: String(row.TieneFactura).toLowerCase() === 'si' || String(row.TieneFactura).toLowerCase() === 'true',
@@ -153,13 +153,14 @@ export async function importCasosFromExcel(formData: FormData) {
       success: true, 
       message: `Proceso completado: ${importados} casos nuevos importados, ${actualizados} casos actualizados.` 
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Error desconocido'
     console.error('Error importing Excel:', error)
     await createNotification({
       tipo: 'error',
       titulo: 'Error en Importación Excel',
-      mensaje: `Ocurrió un error al procesar el archivo Excel: ${error.message || 'Error desconocido'}.`
+      mensaje: `Ocurrió un error al procesar el archivo Excel: ${message}.`
     })
-    return { success: false, error: error.message || 'Error procesando el archivo Excel.' }
+    return { success: false, error: message }
   }
 }

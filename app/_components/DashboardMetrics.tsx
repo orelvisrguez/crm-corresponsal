@@ -1,12 +1,11 @@
 'use client'
 
-import { useMemo } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
 } from 'recharts'
 import { AlertCircle, TrendingUp, FileText, CheckCircle2, DollarSign } from 'lucide-react'
-import { formatCurrency, formatDate, PAISES } from '@/lib/utils'
+import { formatCurrency, formatDate } from '@/lib/utils'
 
 interface DashboardProps {
   stats: {
@@ -15,10 +14,23 @@ interface DashboardProps {
     facturasVencidas: number
     margenBeneficio: number
   }
-  chartDataCorresponsales: any[]
-  chartDataEstados: any[]
-  alertasFacturas: any[]
-  actividadReciente: any[]
+  chartDataCorresponsales: { nombre: string, volumenUsd: number }[]
+  chartDataEstados: { name: string, value: number }[]
+  alertasFacturas: { 
+    id: number, 
+    idCasoAssistravel: string, 
+    corresponsal: { nombre: string }, 
+    fechaVtoFact: Date, 
+    nroFactura: string | null 
+  }[]
+  actividadReciente: {
+    id: number,
+    idCasoAssistravel: string,
+    corresponsal: { nombre: string },
+    pais: string | null,
+    fechaInicio: Date | null,
+    estadoInterno: string
+  }[]
 }
 
 const COLORS = ['#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#64748b']
@@ -103,7 +115,7 @@ export function DashboardMetrics({ stats, chartDataCorresponsales, chartDataEsta
                 <RechartsTooltip 
                   cursor={{fill: '#334155', opacity: 0.2}}
                   contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#f8fafc' }}
-                  formatter={(value: any) => [formatCurrency(value as number, 'USD'), 'Volumen USD']}
+                  formatter={(value) => [formatCurrency(value as number, 'USD'), 'Volumen USD']}
                 />
                 <Bar dataKey="volumenUsd" fill="#0ea5e9" radius={[4, 4, 0, 0]} maxBarSize={50} />
               </BarChart>

@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/renderer'
+import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer'
 
 // Register fonts for a more professional look
 // Note: In a real app, you might bundle these or use standard ones

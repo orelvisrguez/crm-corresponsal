@@ -8,19 +8,20 @@ import { cn } from '@/lib/utils'
 import { ThemeToggle } from './ThemeToggle'
 import { NotificationBell } from './NotificationBell'
 import { signOut, getCurrentUser } from '@/lib/actions/users'
+import { Profile } from '@prisma/client'
 
 export function Sidebar() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<{ profile: Profile } | null>(null)
 
   useEffect(() => {
-    setIsOpen(false)
-  }, [pathname])
-
-  useEffect(() => {
-    getCurrentUser().then(setUser)
+    getCurrentUser().then(u => {
+      if (u) setUser(u as unknown as { profile: Profile })
+    })
   }, [])
+
+  const closeSidebar = () => setIsOpen(false)
 
   return (
     <>
@@ -42,7 +43,7 @@ export function Sidebar() {
       {isOpen && (
         <div
           className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 md:hidden"
-          onClick={() => setIsOpen(false)}
+          onClick={closeSidebar}
         />
       )}
 
@@ -63,7 +64,7 @@ export function Sidebar() {
             </div>
           </div>
           <button
-            onClick={() => setIsOpen(false)}
+            onClick={closeSidebar}
             className="md:hidden p-1 text-muted-foreground hover:bg-accent rounded-md"
           >
             <X className="w-5 h-5" />
@@ -78,6 +79,7 @@ export function Sidebar() {
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           <Link
             href="/"
+            onClick={closeSidebar}
             className={cn(
               'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
               pathname === '/' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
@@ -88,6 +90,7 @@ export function Sidebar() {
           </Link>
           <Link
             href="/casos"
+            onClick={closeSidebar}
             className={cn(
               'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
               pathname.startsWith('/casos') ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
@@ -98,6 +101,7 @@ export function Sidebar() {
           </Link>
           <Link
             href="/corresponsales"
+            onClick={closeSidebar}
             className={cn(
               'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
               pathname.startsWith('/corresponsales') ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
@@ -108,6 +112,7 @@ export function Sidebar() {
           </Link>
           <Link
             href="/informes"
+            onClick={closeSidebar}
             className={cn(
               'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
               pathname.startsWith('/informes') ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
@@ -119,6 +124,7 @@ export function Sidebar() {
 
           <Link
             href="/perfil"
+            onClick={closeSidebar}
             className={cn(
               'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
               pathname === '/perfil' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
@@ -135,6 +141,7 @@ export function Sidebar() {
               </div>
               <Link
                 href="/admin/users"
+                onClick={closeSidebar}
                 className={cn(
                   'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
                   pathname.startsWith('/admin/users') ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
@@ -145,6 +152,7 @@ export function Sidebar() {
               </Link>
               <Link
                 href="/admin/settings"
+                onClick={closeSidebar}
                 className={cn(
                   'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
                   pathname.startsWith('/admin/settings') ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
@@ -159,7 +167,7 @@ export function Sidebar() {
 
         <div className="border-t border-border p-4 bg-muted/20">
           <div className="flex items-center justify-between mb-4">
-            <Link href="/perfil" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <Link href="/perfil" onClick={closeSidebar} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
                 <User className="w-4 h-4 text-primary" />
               </div>

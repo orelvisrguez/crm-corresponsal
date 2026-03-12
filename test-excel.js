@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const xlsx = require('xlsx');
 const workbook = xlsx.readFile('doc/casos.xlsx');
 const sheetName = workbook.SheetNames[0];

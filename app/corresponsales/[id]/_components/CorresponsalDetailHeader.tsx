@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowLeft, Printer, Pencil } from 'lucide-react'
+import { ArrowLeft, Printer } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 

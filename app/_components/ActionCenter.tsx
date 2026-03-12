@@ -1,12 +1,8 @@
 'use client'
 
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
 import { 
-  AlertTriangle, 
   FileWarning, 
   Trophy, 
-  ChevronRight, 
   Calendar,
   ExternalLink
 } from 'lucide-react'
@@ -15,11 +11,30 @@ import { Badge } from '@/components/ui/badge'
 import { formatCurrency, cn } from '@/lib/utils'
 import Link from 'next/link'
 
+interface InvoiceData {
+  id: number
+  idCasoAssistravel: string
+  costoUsd: number | null
+  fechaVtoFact: Date | null
+  corresponsal: {
+    nombre: string
+  }
+}
+
+interface StarCorresponsal {
+  id: string
+  nombre: string
+  pais: string | null
+  _count: {
+    casos: number
+  }
+}
+
 interface Props {
   data: {
-    upcomingInvoices: any[]
-    missingInvoiceNumbers: any[]
-    starCorresponsales: any[]
+    upcomingInvoices: InvoiceData[]
+    missingInvoiceNumbers: InvoiceData[]
+    starCorresponsales: StarCorresponsal[]
   }
 }
 
@@ -36,8 +51,10 @@ export function ActionCenter({ data }: Props) {
         </CardHeader>
         <CardContent className="p-0">
           <div className="divide-y divide-border/50">
-            {data.upcomingInvoices.length > 0 ? data.upcomingInvoices.map((inv: any) => {
-              const daysLeft = Math.ceil((new Date(inv.fechaVtoFact).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+            {data.upcomingInvoices.length > 0 ? data.upcomingInvoices.map((inv) => {
+              const daysLeft = inv.fechaVtoFact 
+                ? Math.ceil((new Date(inv.fechaVtoFact).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+                : 0
               return (
                 <div key={inv.id} className="p-4 hover:bg-muted/30 transition-colors flex items-center justify-between group">
                   <div className="space-y-1">
@@ -45,7 +62,7 @@ export function ActionCenter({ data }: Props) {
                     <p className="text-[10px] text-muted-foreground">{inv.idCasoAssistravel}</p>
                   </div>
                   <div className="text-right space-y-1">
-                    <p className="text-xs font-black text-foreground">{formatCurrency(inv.costoUsd)}</p>
+                    <p className="text-xs font-black text-foreground">{formatCurrency(inv.costoUsd || 0)}</p>
                     <Badge variant={daysLeft <= 0 ? "destructive" : "outline"} className="text-[9px] py-0 h-4">
                       {daysLeft <= 0 ? 'Vencida' : `En ${daysLeft} días`}
                     </Badge>
@@ -69,14 +86,14 @@ export function ActionCenter({ data }: Props) {
         </CardHeader>
         <CardContent className="p-0">
           <div className="divide-y divide-border/50">
-            {data.missingInvoiceNumbers.length > 0 ? data.missingInvoiceNumbers.map((inv: any) => (
+            {data.missingInvoiceNumbers.length > 0 ? data.missingInvoiceNumbers.map((inv) => (
               <div key={inv.id} className="p-4 hover:bg-muted/30 transition-colors flex items-center justify-between">
                 <div className="space-y-1">
                   <p className="text-xs font-bold text-foreground line-clamp-1">{inv.corresponsal.nombre}</p>
                   <p className="text-[10px] text-muted-foreground">{inv.idCasoAssistravel}</p>
                 </div>
                 <div className="flex items-center gap-3">
-                   <p className="text-xs font-black text-foreground">{formatCurrency(inv.costoUsd)}</p>
+                   <p className="text-xs font-black text-foreground">{formatCurrency(inv.costoUsd || 0)}</p>
                    <Link href={`/casos?search=${inv.idCasoAssistravel}`} className="p-1.5 bg-muted rounded-md hover:bg-primary hover:text-white transition-colors">
                      <ExternalLink className="w-3 h-3" />
                    </Link>
@@ -99,7 +116,7 @@ export function ActionCenter({ data }: Props) {
         </CardHeader>
         <CardContent className="p-0">
           <div className="p-4 space-y-4">
-            {data.starCorresponsales.length > 0 ? data.starCorresponsales.map((cor: any, idx: number) => (
+            {data.starCorresponsales.length > 0 ? data.starCorresponsales.map((cor, idx) => (
               <div key={cor.id} className="flex items-center gap-4">
                 <div className={cn(
                   "w-8 h-8 rounded-full flex items-center justify-center text-xs font-black",

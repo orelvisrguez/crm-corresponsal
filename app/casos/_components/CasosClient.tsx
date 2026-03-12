@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useTransition, useEffect, useCallback } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
-import { Caso, Corresponsal, EstadoInterno, EstadoCaso, CasoLog } from '@prisma/client'
+import { Caso, Corresponsal, CasoLog } from '@prisma/client'
 import { toast } from 'sonner'
 import { 
   Plus, Search, Trash2, Pencil, Eye, Filter, X, 
@@ -142,7 +142,7 @@ export function CasosClient({ initialCasos, corresponsales }: Props) {
   }, [casos, search, filterEstadoInterno, filterEstadoCaso, filterCorresponsal])
 
   // Reset pagination when filters change
-  useMemo(() => {
+  useEffect(() => {
     setCurrentPage(1)
     setSelectedIds([]) // Clear selection when filters change
   }, [search, filterEstadoInterno, filterEstadoCaso, filterCorresponsal])
@@ -297,8 +297,9 @@ Para confirmar la eliminación masiva, escriba "ELIMINAR" a continuación:`
       } else {
         toast.error(result.error || 'Error al importar')
       }
-    } catch (err: any) {
-      toast.error(err.message || 'Error al importar archivo')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Error al importar archivo'
+      toast.error(message)
     } finally {
       setIsImporting(false)
       // reset file input

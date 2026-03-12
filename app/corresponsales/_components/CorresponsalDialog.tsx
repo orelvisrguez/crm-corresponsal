@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useTransition } from 'react'
-import { useForm, useFieldArray } from 'react-hook-form'
+import { useForm, useFieldArray, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Corresponsal } from '@prisma/client'
 import { toast } from 'sonner'
@@ -51,7 +51,7 @@ export function CorresponsalDialog({ open, onClose, corresponsal, onSuccess }: P
   const [newEsp, setNewEsp] = useState('')
   const [newCity, setNewCity] = useState('')
 
-  const { register, handleSubmit, reset, control, watch, setValue, formState: { errors } } = useForm<CorresponsalFormData>({
+  const { register, handleSubmit, reset, control, setValue, formState: { errors } } = useForm<CorresponsalFormData>({
     resolver: zodResolver(corresponsalSchema),
     defaultValues: {
       nombre: '',
@@ -73,8 +73,8 @@ export function CorresponsalDialog({ open, onClose, corresponsal, onSuccess }: P
     name: 'contactos'
   })
 
-  const especialidades = watch('especialidades') || []
-  const ciudades = watch('ciudadesCobertura') || []
+  const especialidades = useWatch({ control, name: 'especialidades' }) || []
+  const ciudades = useWatch({ control, name: 'ciudadesCobertura' }) || []
 
   useEffect(() => {
     if (corresponsal) {
@@ -89,7 +89,7 @@ export function CorresponsalDialog({ open, onClose, corresponsal, onSuccess }: P
         notasInternas: corresponsal.notasInternas ?? '',
         ciudadesCobertura: Array.isArray(corresponsal.ciudadesCobertura) ? corresponsal.ciudadesCobertura : [],
         especialidades: Array.isArray(corresponsal.especialidades) ? corresponsal.especialidades : [],
-        contactos: Array.isArray(corresponsal.contactos) ? (corresponsal.contactos as any) : [],
+        contactos: Array.isArray(corresponsal.contactos) ? (corresponsal.contactos as unknown as CorresponsalFormData['contactos']) : [],
       })
     } else {
       reset({ 
@@ -141,7 +141,7 @@ export function CorresponsalDialog({ open, onClose, corresponsal, onSuccess }: P
         } else {
           toast.error(res.error || 'Error al procesar la solicitud')
         }
-      } catch (err: unknown) {
+      } catch {
         toast.error('Ocurrió un error inesperado. Por favor intente nuevamente.')
       }
     })

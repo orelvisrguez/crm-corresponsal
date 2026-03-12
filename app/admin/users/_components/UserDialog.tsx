@@ -28,8 +28,9 @@ export function UserDialog({ open, onClose, onSuccess }: Props) {
         toast.success('Usuario invitado correctamente')
         onSuccess()
         onClose()
-      } catch (err: any) {
-        toast.error('Error', { description: err.message })
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Error desconocido'
+        toast.error('Error', { description: message })
       }
     })
   }

@@ -27,7 +27,7 @@ interface Props {
 
 export default function OperationsMap({ pins }: Props) {
   const [isMounted, setIsMounted] = useState(false)
-  const [L, setL] = useState<any>(null)
+  const [L, setL] = useState<typeof import('leaflet') | null>(null)
 
   useEffect(() => {
     setIsMounted(true)

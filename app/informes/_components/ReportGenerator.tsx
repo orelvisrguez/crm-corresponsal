@@ -6,7 +6,7 @@ import {
   Download, Printer, Sparkles, Loader2, ChevronRight, AlertCircle,
   Save, History, Trash2, Calendar, HeartPulse
 } from 'lucide-react'
-import { generateAIReport, ReportType, saveReport, getSavedReports, deleteReport } from '@/lib/actions/reports'
+import { generateAIReport, ReportType, saveReport, getSavedReports, deleteReport, Report } from '@/lib/actions/reports'
 import { cn } from '@/lib/utils'
 import ReactMarkdown from 'react-markdown'
 import { toast } from 'sonner'
@@ -53,7 +53,7 @@ export function ReportGenerator() {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [report, setReport] = useState<string | null>(null)
-  const [history, setHistory] = useState<any[]>([])
+  const [history, setHistory] = useState<Report[]>([])
   const [activeTab, setActiveTab] = useState<'generar' | 'historial'>('generar')
 
   const fetchHistory = async () => {
@@ -79,7 +79,7 @@ export function ReportGenerator() {
         setReport(res.content)
         toast.success('Informe generado con éxito')
       }
-    } catch (err) {
+    } catch {
       toast.error('Error al conectar con la IA')
     } finally {
       setLoading(false)
@@ -102,7 +102,7 @@ export function ReportGenerator() {
       } else {
         toast.error(res.error || 'Error al guardar')
       }
-    } catch (err) {
+    } catch {
       toast.error('Error de servidor')
     } finally {
       setSaving(false)
@@ -223,7 +223,7 @@ export function ReportGenerator() {
                     <p className="text-xs italic">No hay informes guardados aún.</p>
                   </div>
                 ) : (
-                  history.map((item: any) => (
+                  history.map((item) => (
                     <div 
                       key={item.id}
                       className="group bg-muted/30 border border-border rounded-xl p-3 hover:border-primary/30 transition-all"

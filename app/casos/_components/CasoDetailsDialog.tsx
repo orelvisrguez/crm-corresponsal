@@ -17,7 +17,7 @@ interface Props {
   caso: CasoWithCorresponsal | null
 }
 
-function DetailItem({ label, value, icon: Icon, className }: { label: string; value: React.ReactNode; icon?: any; className?: string }) {
+function DetailItem({ label, value, icon: Icon, className }: { label: string; value: React.ReactNode; icon?: React.ComponentType<{ className?: string }>; className?: string }) {
   return (
     <div className={cn("p-3 rounded-xl bg-muted/30 border border-border/50", className)}>
       <div className="flex items-center gap-2 mb-1">
