@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Corresponsal {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  email     String?
+  telefono  String?
+  paisBase  String?
+  notas     String?
+  casos     Caso[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("corresponsales")
+}
+
+model Caso {
+  id                 Int           @id @default(autoincrement())
+  corresponsalId     Int
+  corresponsal       Corresponsal  @relation(fields: [corresponsalId], references: [id])
+  idCasoAssistravel  String        @unique
+  idCasoCorresponsal String?
+  fechaInicio        DateTime?
+  pais               String?
+  costoFee           Float?        @default(0)
+  costoUsd           Float?        @default(0)
+  montoAgregado      Float?        @default(0)
+  costoMonedaLocal   Float?        @default(0)
+  tasaCambio         Float?        @default(1)
+  simboloMonedaLocal String?
+  informeMedico      Boolean       @default(false)
+  tieneFactura       Boolean       @default(false)
+  nroFactura         String?
+  fechaEmiFact       DateTime?
+  fechaVtoFact       DateTime?
+  fechaPagFact       DateTime?
+  estadoInterno      EstadoInterno @default(Abierto)
+  estadoCaso         EstadoCaso    @default(NoFee)
+  observaciones      String?
+  logs               CasoLog[]
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@map("casos")
+}
+
+model CasoLog {
+  id        Int      @id @default(autoincrement())
+  casoId    Int
+  caso      Caso     @relation(fields: [casoId], references: [id], onDelete: Cascade)
+  tipo      String   // 'ESTADO_INTERNO', 'ESTADO_CASO', 'FACTURACION', etc.
+  valorAnterior String?
+  valorNuevo    String?
+  usuario       String?  @default("Sistema")
+  createdAt DateTime @default(now())
+
+  @@map("caso_logs")
+}
+
+model Profile {
+  id             String     @id @db.Uuid
+  nombreCompleto String
+  email          String     @unique
+  rol            UserRole   @default(visor)
+  estado         UserStatus @default(activo)
+  ultimoAcceso   DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@map("profiles")
+}
+
+enum UserRole {
+  admin
+  operador
+  visor
+}
+
+enum UserStatus {
+  activo
+  inactivo
+}
+
+enum EstadoInterno {
+  Abierto
+  Cerrado
+  Pausado
+  Cancelado
+}
+
+enum EstadoCaso {
+  NoFee
+  OnGoing
+  Refacturado
+  ParaRefacturar
+  Cobrado
+}
