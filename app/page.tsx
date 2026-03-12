@@ -1,4 +1,4 @@
-import { getDashboardAnalytics, getActionCenterData } from '@/lib/actions/analytics'
+import { getDashboardAnalytics, getActionCenterData, type DashboardAnalytics } from '@/lib/actions/analytics'
 import { AnalyticsCards } from './_components/AnalyticsCards'
 import { AnalyticsCharts } from './_components/AnalyticsCharts'
 import { AIExecutiveSummary } from './_components/AIExecutiveSummary'
