@@ -130,10 +130,15 @@ export function CasosClient({ initialCasos, corresponsales }: Props) {
 
   const filtered = useMemo(() => {
     return casos.filter(c => {
+      const searchTerm = search.toLowerCase()
       const matchSearch = !search ||
-        c.idCasoAssistravel.toLowerCase().includes(search.toLowerCase()) ||
-        c.corresponsal.nombre.toLowerCase().includes(search.toLowerCase()) ||
-        (c.pais ?? '').toLowerCase().includes(search.toLowerCase())
+        c.idCasoAssistravel.toLowerCase().includes(searchTerm) ||
+        (c.idCasoCorresponsal ?? '').toLowerCase().includes(searchTerm) ||
+        c.corresponsal.nombre.toLowerCase().includes(searchTerm) ||
+        (c.pais ?? '').toLowerCase().includes(searchTerm) ||
+        (c.nroFactura ?? '').toLowerCase().includes(searchTerm) ||
+        (c.observaciones ?? '').toLowerCase().includes(searchTerm)
+      
       const matchEI = filterEstadoInterno === 'all' || c.estadoInterno === filterEstadoInterno
       const matchEC = filterEstadoCaso === 'all' || c.estadoCaso === filterEstadoCaso
       const matchCR = filterCorresponsal === 'all' || c.corresponsalId === filterCorresponsal
@@ -339,7 +344,7 @@ Para confirmar la eliminación masiva, escriba "ELIMINAR" a continuación:`
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Buscar por ID, corresponsal o país..."
+              placeholder="Buscar por ID Assistravel, Corresponsal, País, Factura o ID Corresponsal..."
               value={search}
               onChange={e => handleSearchChange(e.target.value)}
               className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
