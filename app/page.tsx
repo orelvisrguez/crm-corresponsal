@@ -22,10 +22,28 @@ export default async function DashboardPage({ searchParams }: PageProps) {
   const from = params.from ? new Date(params.from) : undefined
   const to = params.to ? new Date(params.to) : undefined
 
-  const [analytics, actionCenter] = await Promise.all([
-    getDashboardAnalytics(from && to ? { from, to } : undefined),
-    getActionCenterData()
-  ])
+  let analytics: DashboardAnalytics | null = null
+  let actionCenter: any = null
+
+  try {
+    const results = await Promise.all([
+      getDashboardAnalytics(from && to ? { from, to } : undefined),
+      getActionCenterData()
+    ])
+    analytics = results[0]
+    actionCenter = results[1]
+  } catch (error) {
+    console.error('Error loading dashboard data:', error)
+  }
+
+  if (!analytics || !actionCenter) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+        <h2 className="text-xl font-bold">Error al cargar datos</h2>
+        <p className="text-muted-foreground">Por favor, verifica la conexión con la base de datos y las variables de entorno.</p>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-8 pb-10">

@@ -18,13 +18,10 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     
-    // We create a new redirect response but copy the cookies from supabaseResponse
+    // We create a new redirect response and copy all cookies from the supabaseResponse
     const redirectResponse = NextResponse.redirect(url)
     supabaseResponse.cookies.getAll().forEach((cookie) => {
-      redirectResponse.cookies.set(cookie.name, cookie.value, {
-        path: '/',
-        ...cookie
-      })
+      redirectResponse.cookies.set(cookie.name, cookie.value, cookie)
     })
     return redirectResponse
   }

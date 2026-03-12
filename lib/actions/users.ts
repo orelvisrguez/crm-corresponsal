@@ -7,30 +7,35 @@ import { revalidatePath } from 'next/cache'
 
 // Utility to get current user and profile
 export async function getCurrentUser() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) return null
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) return null
 
-  let profile = await prisma.profile.findUnique({
-    where: { id: user.id }
-  })
-
-  // Auto-create profile if missing (helps with DB resets)
-  if (!profile) {
-    const isAdmin = user.email === 'orelvis.rguez@gmail.com'
-    profile = await prisma.profile.create({
-      data: {
-        id: user.id,
-        email: user.email!,
-        nombreCompleto: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuario',
-        rol: isAdmin ? 'admin' : 'visor',
-        estado: 'activo'
-      }
+    let profile = await prisma.profile.findUnique({
+      where: { id: user.id }
     })
-  }
 
-  return { ...user, profile }
+    // Auto-create profile if missing (helps with DB resets)
+    if (!profile) {
+      const isAdmin = user.email === 'orelvis.rguez@gmail.com'
+      profile = await prisma.profile.create({
+        data: {
+          id: user.id,
+          email: user.email!,
+          nombreCompleto: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuario',
+          rol: isAdmin ? 'admin' : 'visor',
+          estado: 'activo'
+        }
+      })
+    }
+
+    return { ...user, profile }
+  } catch (error) {
+    console.error('Error in getCurrentUser:', error)
+    return null
+  }
 }
 
 export async function checkRole(requiredRoles: UserRole[]) {
