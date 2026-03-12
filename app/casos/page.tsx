@@ -1,13 +1,15 @@
 import { getCasos } from '@/lib/actions/casos'
 import { getCorresponsales } from '@/lib/actions/corresponsales'
 import { CasosClient } from './_components/CasosClient'
+import { CasosSkeleton } from './_components/CasosSkeleton'
 import { LayoutDashboard } from 'lucide-react'
+import { Suspense } from 'react'
 
 export const dynamic = 'force-dynamic'
 
 export default async function CasosPage() {
   const [casos, corresponsales] = await Promise.all([
-    getCasos(),
+    getCasos(undefined, true),
     getCorresponsales(),
   ])
 
@@ -22,7 +24,9 @@ export default async function CasosPage() {
           <p className="text-sm text-muted-foreground">Gestión de asistencias médicas</p>
         </div>
       </div>
-      <CasosClient initialCasos={casos} corresponsales={corresponsales} />
+      <Suspense fallback={<CasosSkeleton />}>
+        <CasosClient initialCasos={casos} corresponsales={corresponsales} />
+      </Suspense>
     </div>
   )
 }

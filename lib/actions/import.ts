@@ -3,6 +3,7 @@
 import * as xlsx from 'xlsx'
 import { prisma } from '@/lib/prisma'
 import { EstadoInterno, EstadoCaso } from '@prisma/client'
+import { createNotification } from './notifications'
 
 export async function importCasosFromExcel(formData: FormData) {
   try {
@@ -40,7 +41,8 @@ export async function importCasosFromExcel(formData: FormData) {
         corresponsal = await prisma.corresponsal.create({
           data: {
             nombre: nombreCorresponsal,
-            notas: 'Creado automáticamente desde importación Excel'
+            pais: row.Pais ? String(row.Pais).trim() : null,
+            notasInternas: 'Creado automáticamente desde importación Excel'
           }
         })
       }
@@ -153,6 +155,11 @@ export async function importCasosFromExcel(formData: FormData) {
     }
   } catch (error: any) {
     console.error('Error importing Excel:', error)
+    await createNotification({
+      tipo: 'error',
+      titulo: 'Error en Importación Excel',
+      mensaje: `Ocurrió un error al procesar el archivo Excel: ${error.message || 'Error desconocido'}.`
+    })
     return { success: false, error: error.message || 'Error procesando el archivo Excel.' }
   }
 }

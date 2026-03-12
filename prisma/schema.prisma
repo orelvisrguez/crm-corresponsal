@@ -9,23 +9,28 @@ datasource db {
 }
 
 model Corresponsal {
-  id        Int      @id @default(autoincrement())
-  nombre    String
-  email     String?
-  telefono  String?
-  paisBase  String?
-  notas     String?
-  casos     Caso[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String   @id @default(uuid())
+  nombre            String
+  email             String?  @unique
+  pais              String?
+  taxId             String?
+  direccionOficina  String?
+  sitioWeb          String?
+  calificacion      Int?     @default(3)
+  notasInternas     String?
+  ciudadesCobertura String[]
+  especialidades    String[]
+  contactos         Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  casos             Caso[]
 
   @@map("corresponsales")
 }
 
 model Caso {
   id                 Int           @id @default(autoincrement())
-  corresponsalId     Int
-  corresponsal       Corresponsal  @relation(fields: [corresponsalId], references: [id])
+  corresponsalId     String
   idCasoAssistravel  String        @unique
   idCasoCorresponsal String?
   fechaInicio        DateTime?
@@ -45,22 +50,23 @@ model Caso {
   estadoInterno      EstadoInterno @default(Abierto)
   estadoCaso         EstadoCaso    @default(NoFee)
   observaciones      String?
-  logs               CasoLog[]
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
+  logs               CasoLog[]
+  corresponsal       Corresponsal  @relation(fields: [corresponsalId], references: [id])
 
   @@map("casos")
 }
 
 model CasoLog {
-  id        Int      @id @default(autoincrement())
-  casoId    Int
-  caso      Caso     @relation(fields: [casoId], references: [id], onDelete: Cascade)
-  tipo      String   // 'ESTADO_INTERNO', 'ESTADO_CASO', 'FACTURACION', etc.
+  id            Int      @id @default(autoincrement())
+  casoId        Int
+  tipo          String
   valorAnterior String?
   valorNuevo    String?
   usuario       String?  @default("Sistema")
-  createdAt DateTime @default(now())
+  createdAt     DateTime @default(now())
+  caso          Caso     @relation(fields: [casoId], references: [id], onDelete: Cascade)
 
   @@map("caso_logs")
 }
@@ -102,4 +108,40 @@ enum EstadoCaso {
   Refacturado
   ParaRefacturar
   Cobrado
+}
+
+model Report {
+  id        String   @id @default(uuid())
+  tipo      String   // economico, operativo, financiero, contable
+  titulo    String
+  contenido String   @db.Text
+  dataSnapshot Json? // Backup of the data used for the report
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("reports")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  tipo      String   // info, warning, error, success
+  titulo    String
+  mensaje   String
+  leida     Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
+}
+
+model Setting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  type      String   @default("string") // string, number, boolean, json
+  group     String   @default("general") // general, financial, integration
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
 }

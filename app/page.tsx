@@ -1,132 +1,80 @@
-import { prisma } from '@/lib/prisma'
-import { DashboardMetrics } from './_components/DashboardMetrics'
+import { startOfMonth, endOfMonth } from 'date-fns'
+import { getDashboardAnalytics, getActionCenterData } from '@/lib/actions/analytics'
+import { AnalyticsCards } from './_components/AnalyticsCards'
+import { AnalyticsCharts } from './_components/AnalyticsCharts'
+import { AIExecutiveSummary } from './_components/AIExecutiveSummary'
+import { ActionCenter } from './_components/ActionCenter'
+import { DateRangePicker } from './_components/DateRangePicker'
+import OperationsMap from './_components/OperationsMap'
+import { Filter } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
-export default async function DashboardPage() {
+interface PageProps {
+  searchParams: Promise<{ 
+    from?: string 
+    to?: string 
+  }>
+}
+
+export default async function DashboardPage({ searchParams }: PageProps) {
+  const params = await searchParams
   
-  // 1. Data Fetching
-  const now = new Date()
-  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-  const alertThreshold = new Date(now)
-  alertThreshold.setDate(alertThreshold.getDate() + 2) // Next 48hs
+  const from = params.from ? new Date(params.from) : undefined
+  const to = params.to ? new Date(params.to) : undefined
 
-  const [
-    casosMesAction,
-    casosAbiertosCount,
-    facturasVencidasL,
-    todosCasos,
-    corresponsales,
-    actividadReciente
-  ] = await Promise.all([
-    // Casos for this month calculations
-    prisma.caso.findMany({
-      where: { fechaInicio: { gte: firstDayOfMonth } }
-    }),
-    
-    // Casos Abiertos (Total)
-    prisma.caso.count({
-      where: { estadoInterno: 'Abierto' }
-    }),
-
-    // Facturas vencidas o por vencer (próximas 48hs) y NO PAGADAS
-    prisma.caso.findMany({
-      where: {
-        tieneFactura: true,
-        fechaVtoFact: { lte: alertThreshold },
-        fechaPagFact: null
-      },
-      include: { corresponsal: true },
-      orderBy: { fechaVtoFact: 'asc' },
-      take: 10
-    }),
-
-    // Todos los casos report stats/charts
-    prisma.caso.findMany({
-      select: {
-        costoUsd: true,
-        estadoCaso: true,
-        corresponsalId: true
-      }
-    }),
-
-    // Corresponsales para nombre mapping
-    prisma.corresponsal.findMany({ select: { id: true, nombre: true } }),
-
-    // Actividad reciente (Ultimos 5 casos creados/actualizados)
-    prisma.caso.findMany({
-      include: { corresponsal: true },
-      orderBy: { createdAt: 'desc' },
-      take: 5
-    })
+  const [analytics, actionCenter] = await Promise.all([
+    getDashboardAnalytics(from && to ? { from, to } : undefined),
+    getActionCenterData()
   ])
 
-  // 2. Data Processing para las tarjetas principales
-  const totalUsdMes = casosMesAction.reduce((acc, curr) => acc + (curr.costoUsd || 0), 0)
-  
-  // Margen: Promedio o Total ((Fee - CostoUsd) / Fee * 100) -> Vamos a hacer una suma total para el margen promedio ponderado.
-  const diffFeeUsd = casosMesAction.reduce((acc, curr) => acc + ((curr.costoFee || 0) - (curr.costoUsd || 0)), 0)
-  const totalFee = casosMesAction.reduce((acc, curr) => acc + (curr.costoFee || 0), 0)
-  const margenBeneficio = totalFee > 0 ? (diffFeeUsd / totalFee) * 100 : 0
-
-  const stats = {
-    totalUsdMes,
-    casosAbiertos: casosAbiertosCount,
-    facturasVencidas: facturasVencidasL.length,
-    margenBeneficio
-  }
-
-  // 3. Process chart data (Corresponsales)
-  const volumenPorCorresponsal: Record<number, number> = {}
-  todosCasos.forEach(c => {
-    if (c.costoUsd) {
-      volumenPorCorresponsal[c.corresponsalId] = (volumenPorCorresponsal[c.corresponsalId] || 0) + c.costoUsd
-    }
-  })
-
-  const chartDataCorresponsales = corresponsales
-    .map(c => ({
-      nombre: c.nombre.length > 15 ? c.nombre.substring(0, 15) + '...' : c.nombre,
-      volumenUsd: volumenPorCorresponsal[c.id] || 0
-    }))
-    .filter(c => c.volumenUsd > 0)
-    .sort((a, b) => b.volumenUsd - a.volumenUsd) // Mayor a menor
-    .slice(0, 10) // Top 10
-
-  // 4. Process chart data (Estados)
-  const countPorEstado: Record<string, number> = {}
-  todosCasos.forEach(c => {
-      countPorEstado[c.estadoCaso] = (countPorEstado[c.estadoCaso] || 0) + 1
-  })
-
-  const estadosLabels: Record<string, string> = {
-    NoFee: 'No Fee', OnGoing: 'On Going', Refacturado: 'Refacturado', 
-    ParaRefacturar: 'Para Refacturar', Cobrado: 'Cobrado'
-  }
-
-  const chartDataEstados = Object.entries(countPorEstado)
-    .map(([key, value]) => ({
-      name: estadosLabels[key] || key,
-      value
-    }))
-    .sort((a, b) => b.value - a.value)
-
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Panel de control y métricas clave de la operación.
-        </p>
+    <div className="space-y-8 pb-10">
+      {/* Header & Global Filters */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-black tracking-tight text-foreground">Analytics Dashboard</h1>
+          <p className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
+            <Filter className="w-3 h-3" />
+            Control de gestión operativa y financiera en tiempo real
+          </p>
+        </div>
+        
+        <DateRangePicker />
       </div>
 
-      <DashboardMetrics 
-        stats={stats}
-        chartDataCorresponsales={chartDataCorresponsales}
-        chartDataEstados={chartDataEstados}
-        alertasFacturas={facturasVencidasL}
-        actividadReciente={actividadReciente}
-      />
+      {/* 1. AI Insights (Top priority) */}
+      <AIExecutiveSummary data={analytics} />
+
+      {/* 2. Key Metrics Cards */}
+      <AnalyticsCards data={analytics} />
+
+      {/* 3. Main Operational & Financial Charts */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-2">
+           <div className="w-1 h-5 bg-primary rounded-full" />
+           <h2 className="text-lg font-bold text-foreground">Visualizaciones Operativas</h2>
+        </div>
+        
+        <OperationsMap pins={analytics.mapData} />
+        
+        <AnalyticsCharts data={analytics} />
+      </div>
+
+      {/* 4. Action Center (Alerts, Invoices, Stars) */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-2">
+           <div className="w-1 h-5 bg-rose-500 rounded-full" />
+           <h2 className="text-lg font-bold text-foreground">Action Center & Alerts</h2>
+        </div>
+        <ActionCenter data={actionCenter} />
+      </div>
+
+      {/* Summary Footer */}
+      <div className="pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
+        <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Assistravel CRM • Business Intelligence Unit</p>
+        <p className="text-[10px] text-muted-foreground italic">Datos actualizados al {new Date().toLocaleString()}</p>
+      </div>
     </div>
   )
 }

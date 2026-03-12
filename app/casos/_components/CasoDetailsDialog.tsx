@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { Caso, Corresponsal, CasoLog } from '@prisma/client'
-import { X, Calendar, Globe, DollarSign, FileText, Info, Clock, CheckCircle2, AlertCircle, TrendingUp, History, ArrowRight } from 'lucide-react'
+import { X, Calendar, Globe, DollarSign, FileText, Info, Clock, CheckCircle2, AlertCircle, TrendingUp, History, ArrowRight, Pencil } from 'lucide-react'
 import { cn, formatDate, formatCurrency, ESTADO_CASO_LABELS, ESTADO_INTERNO_COLORS, ESTADO_CASO_COLORS } from '@/lib/utils'
 
 type CasoWithCorresponsal = Caso & { 
@@ -13,6 +13,7 @@ type CasoWithCorresponsal = Caso & {
 interface Props {
   open: boolean
   onClose: () => void
+  onEdit: (caso: CasoWithCorresponsal) => void
   caso: CasoWithCorresponsal | null
 }
 
@@ -30,7 +31,7 @@ function DetailItem({ label, value, icon: Icon, className }: { label: string; va
   )
 }
 
-export function CasoDetailsDialog({ open, onClose, caso }: Props) {
+export function CasoDetailsDialog({ open, onClose, onEdit, caso }: Props) {
   if (!open || !caso) return null
 
   // Logical Sum based on User Request: fee + costousd + montoagregado
@@ -191,6 +192,19 @@ export function CasoDetailsDialog({ open, onClose, caso }: Props) {
                               </>
                             )}
                             <span className="font-bold text-primary">{log.valorNuevo}</span>
+                            
+                            {/* Diff badge for financial values */}
+                            {log.valorAnterior && log.valorNuevo && (log.tipo.includes('COSTO') || log.tipo.includes('FEE')) && !isNaN(parseFloat(log.valorAnterior)) && !isNaN(parseFloat(log.valorNuevo)) && (
+                              <span className={cn(
+                                "ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded",
+                                parseFloat(log.valorNuevo) > parseFloat(log.valorAnterior) 
+                                  ? "bg-emerald-500/10 text-emerald-600" 
+                                  : "bg-red-500/10 text-red-600"
+                              )}>
+                                {parseFloat(log.valorNuevo) > parseFloat(log.valorAnterior) ? '+' : ''}
+                                {(parseFloat(log.valorNuevo) - parseFloat(log.valorAnterior)).toFixed(2)}
+                              </span>
+                            )}
                           </div>
                           <div className="mt-1 text-[9px] text-muted-foreground flex items-center gap-1">
                             <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
@@ -208,7 +222,14 @@ export function CasoDetailsDialog({ open, onClose, caso }: Props) {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-border bg-muted/20 flex justify-end">
+        <div className="px-6 py-4 border-t border-border bg-muted/20 flex justify-end gap-3">
+          <button 
+            onClick={() => onEdit(caso)}
+            className="flex items-center gap-2 px-6 py-2 bg-primary text-primary-foreground rounded-2xl text-sm font-bold hover:opacity-90 transition-opacity shadow-lg shadow-primary/20"
+          >
+            <Pencil className="w-4 h-4" />
+            Editar Caso
+          </button>
           <button 
             onClick={onClose}
             className="px-6 py-2 bg-foreground text-background rounded-2xl text-sm font-bold hover:opacity-90 transition-opacity"

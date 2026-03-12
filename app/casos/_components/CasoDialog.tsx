@@ -92,6 +92,59 @@ export function CasoDialog({ open, onClose, caso, corresponsales, onSuccess }: P
       costoMonedaLocal: 0,
     }
   })
+  
+  // Reset form when case changes (important for editing)
+  useEffect(() => {
+    if (caso) {
+      reset({
+        corresponsalId: caso.corresponsalId,
+        idCasoAssistravel: caso.idCasoAssistravel,
+        idCasoCorresponsal: caso.idCasoCorresponsal ?? undefined,
+        fechaInicio: caso.fechaInicio ? new Date(caso.fechaInicio).toISOString().split('T')[0] : '',
+        pais: caso.pais ?? undefined,
+        costoFee: caso.costoFee ?? 0,
+        costoUsd: caso.costoUsd ?? 0,
+        montoAgregado: caso.montoAgregado ?? 0,
+        costoMonedaLocal: caso.costoMonedaLocal ?? 0,
+        tasaCambio: caso.tasaCambio ?? 1,
+        simboloMonedaLocal: caso.simboloMonedaLocal ?? undefined,
+        informeMedico: caso.informeMedico,
+        tieneFactura: caso.tieneFactura,
+        nroFactura: caso.nroFactura ?? undefined,
+        fechaEmiFact: caso.fechaEmiFact ? new Date(caso.fechaEmiFact).toISOString().split('T')[0] : '',
+        fechaVtoFact: caso.fechaVtoFact ? new Date(caso.fechaVtoFact).toISOString().split('T')[0] : '',
+        fechaPagFact: caso.fechaPagFact ? new Date(caso.fechaPagFact).toISOString().split('T')[0] : '',
+        estadoInterno: caso.estadoInterno,
+        estadoCaso: caso.estadoCaso,
+        observaciones: caso.observaciones ?? undefined,
+      })
+      if (caso.tasaCambio) setTipoCambio(caso.tasaCambio)
+    } else {
+      reset({
+        corresponsalId: '',
+        idCasoAssistravel: '',
+        idCasoCorresponsal: '',
+        fechaInicio: '',
+        pais: '',
+        estadoInterno: 'Abierto',
+        estadoCaso: 'NoFee',
+        informeMedico: false,
+        tieneFactura: false,
+        costoFee: 0,
+        costoUsd: 0,
+        montoAgregado: 0,
+        costoMonedaLocal: 0,
+        tasaCambio: 1,
+        simboloMonedaLocal: '',
+        nroFactura: '',
+        fechaEmiFact: '',
+        fechaVtoFact: '',
+        fechaPagFact: '',
+        observaciones: ''
+      })
+      setTipoCambio(1)
+    }
+  }, [caso, reset, open])
 
   const costUsd = watch('costoUsd') ?? 0
   const costFee = watch('costoFee') ?? 0
@@ -162,7 +215,7 @@ export function CasoDialog({ open, onClose, caso, corresponsales, onSuccess }: P
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-card border border-border rounded-2xl shadow-2xl w-full max-w-4xl max-h-[92vh] overflow-y-auto mx-4">
         {/* Header */}
-        <div className="sticky top-0 bg-card border-b border-border px-6 py-4 flex items-center justify-between rounded-t-2xl">
+        <div className="sticky top-0 bg-card border-b border-border px-6 py-4 flex items-center justify-between rounded-t-2xl z-20">
           <div>
             <h2 className="text-lg font-bold text-foreground">{isEdit ? 'Editar Caso' : 'Nuevo Caso'}</h2>
             <p className="text-xs text-muted-foreground">Complete todos los campos requeridos</p>
@@ -179,7 +232,7 @@ export function CasoDialog({ open, onClose, caso, corresponsales, onSuccess }: P
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <FieldLabel required>Corresponsal</FieldLabel>
-                <Select {...register('corresponsalId', { valueAsNumber: true })}>
+                <Select {...register('corresponsalId')}>
                   <option value="">Seleccionar...</option>
                   {corresponsales.map(c => (
                     <option key={c.id} value={c.id}>{c.nombre}</option>

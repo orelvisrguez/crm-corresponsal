@@ -2,38 +2,35 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
-  const response = await updateSession(request)
+  // 1. Update session and get user. 
+  // IMPORTANT: We must start with the response from updateSession
+  const { supabaseResponse, user } = await updateSession(request)
   const { pathname } = request.nextUrl
 
-  // Skip protection for /login and public assets
-  if (pathname === '/login') return response
-
-  const supabase = await (await import('@supabase/ssr')).createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-        },
-      },
-    }
-  )
-
-  const { data: { user } } = await supabase.auth.getUser()
-
-  // 1. If not logged in and not on /login, redirect to /login
-  if (!user) {
-    return NextResponse.redirect(new URL('/login', request.url))
+  // 2. Allow access to /login
+  if (pathname === '/login') {
+    return supabaseResponse
   }
 
-  // 2. If trying to access /admin, check role (mocking role check for now until Profile is fully ready in context)
-  // For production, we'd fetch profile here or rely on claims.
-  
-  return response
+  // 3. If no user, redirect to /login but KEEP the response's cookies 
+  // (which might be important for clearing old sessions)
+  if (!user) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    
+    // We create a new redirect response but copy the cookies from supabaseResponse
+    const redirectResponse = NextResponse.redirect(url)
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value, {
+        path: '/',
+        ...cookie
+      })
+    })
+    return redirectResponse
+  }
+
+  // 4. Return authorized response
+  return supabaseResponse
 }
 
 export const config = {

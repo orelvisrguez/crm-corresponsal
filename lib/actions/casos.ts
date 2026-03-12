@@ -3,15 +3,16 @@
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/prisma'
 import { casoSchema, CasoFormData } from '@/lib/validations'
-import { EstadoInterno, EstadoCaso } from '@prisma/client'
+import { EstadoInterno, EstadoCaso, UserRole } from '@prisma/client'
+import { getCurrentUser, checkRole } from '@/lib/actions/users'
 
 export interface CasosFilter {
   estadoInterno?: EstadoInterno
   estadoCaso?: EstadoCaso
-  corresponsalId?: number
+  corresponsalId?: string
 }
 
-export async function getCasos(filters?: CasosFilter) {
+export async function getCasos(filters?: CasosFilter, includeLogs: boolean = false) {
   const where: Record<string, unknown> = {}
   if (filters?.estadoInterno) where.estadoInterno = filters.estadoInterno
   if (filters?.estadoCaso) where.estadoCaso = filters.estadoCaso
@@ -21,7 +22,7 @@ export async function getCasos(filters?: CasosFilter) {
     where,
     include: { 
       corresponsal: true,
-      logs: { orderBy: { createdAt: 'desc' } }
+      logs: includeLogs ? { orderBy: { createdAt: 'desc' } } : false
     },
     orderBy: { createdAt: 'desc' },
   })
@@ -38,14 +39,15 @@ export async function getCaso(id: number) {
 }
 
 export async function createCaso(data: CasoFormData) {
+  await checkRole(['admin', 'operador'])
   const validated = casoSchema.parse(data)
   const caso = await prisma.caso.create({
     data: {
       ...validated,
-      fechaInicio: validated.fechaInicio ? new Date(validated.fechaInicio) : null,
-      fechaEmiFact: validated.fechaEmiFact ? new Date(validated.fechaEmiFact) : null,
-      fechaVtoFact: validated.fechaVtoFact ? new Date(validated.fechaVtoFact) : null,
-      fechaPagFact: validated.fechaPagFact ? new Date(validated.fechaPagFact) : null,
+      fechaInicio: data.fechaInicio ? new Date(`${data.fechaInicio}T00:00:00Z`) : null,
+      fechaEmiFact: data.fechaEmiFact ? new Date(`${data.fechaEmiFact}T00:00:00Z`) : null,
+      fechaVtoFact: data.fechaVtoFact ? new Date(`${data.fechaVtoFact}T00:00:00Z`) : null,
+      fechaPagFact: data.fechaPagFact ? new Date(`${data.fechaPagFact}T00:00:00Z`) : null,
     },
     include: { corresponsal: true },
   })
@@ -54,7 +56,10 @@ export async function createCaso(data: CasoFormData) {
 }
 
 export async function updateCaso(id: number, data: CasoFormData) {
+  await checkRole(['admin', 'operador'])
   const validated = casoSchema.parse(data)
+  const user = await getCurrentUser()
+  const userName = user?.profile?.nombreCompleto || user?.email || 'Sistema'
   
   // Get current state for comparison
   const existing = await prisma.caso.findUnique({ where: { id } })
@@ -64,31 +69,40 @@ export async function updateCaso(id: number, data: CasoFormData) {
     where: { id },
     data: {
       ...validated,
-      fechaInicio: validated.fechaInicio ? new Date(validated.fechaInicio) : null,
-      fechaEmiFact: validated.fechaEmiFact ? new Date(validated.fechaEmiFact) : null,
-      fechaVtoFact: validated.fechaVtoFact ? new Date(validated.fechaVtoFact) : null,
-      fechaPagFact: validated.fechaPagFact ? new Date(validated.fechaPagFact) : null,
+      fechaInicio: data.fechaInicio ? new Date(`${data.fechaInicio}T00:00:00Z`) : null,
+      fechaEmiFact: data.fechaEmiFact ? new Date(`${data.fechaEmiFact}T00:00:00Z`) : null,
+      fechaVtoFact: data.fechaVtoFact ? new Date(`${data.fechaVtoFact}T00:00:00Z`) : null,
+      fechaPagFact: data.fechaPagFact ? new Date(`${data.fechaPagFact}T00:00:00Z`) : null,
     },
     include: { corresponsal: true },
   })
 
   // Log changes
   const logs = []
-  if (existing.estadoInterno !== validated.estadoInterno) {
-    logs.push({
-      tipo: 'ESTADO_INTERNO',
-      valorAnterior: existing.estadoInterno,
-      valorNuevo: validated.estadoInterno,
-    })
-  }
+  
+  const fieldsToLog = [
+    { key: 'estadoInterno', label: 'ESTADO_INTERNO' },
+    { key: 'estadoCaso', label: 'ESTADO_CASO' },
+    { key: 'idCasoAssistravel', label: 'ID_ASSISTRAVEL' },
+    { key: 'idCasoCorresponsal', label: 'ID_CORRESPONSAL' },
+    { key: 'corresponsalId', label: 'CORRESPONSAL' },
+    { key: 'pais', label: 'PAIS' },
+    { key: 'costoUsd', label: 'COSTO_USD' },
+    { key: 'costoFee', label: 'COSTO_FEE' },
+  ]
 
-  if (existing.estadoCaso !== validated.estadoCaso) {
-    logs.push({
-      tipo: 'ESTADO_CASO',
-      valorAnterior: existing.estadoCaso,
-      valorNuevo: validated.estadoCaso,
-    })
-  }
+  fieldsToLog.forEach(({ key, label }) => {
+    const oldVal = String((existing as any)[key] ?? '')
+    const newVal = String((validated as any)[key] ?? '')
+    
+    if (oldVal !== newVal) {
+      logs.push({
+        tipo: label,
+        valorAnterior: oldVal,
+        valorNuevo: newVal,
+      })
+    }
+  })
 
   // Detect invoice changes
   if (!existing.tieneFactura && validated.tieneFactura) {
@@ -99,14 +113,14 @@ export async function updateCaso(id: number, data: CasoFormData) {
   } else if (existing.nroFactura !== validated.nroFactura) {
     logs.push({
       tipo: 'FACTURACION',
-      valorAnterior: existing.nroFactura,
-      valorNuevo: validated.nroFactura,
+      valorAnterior: existing.nroFactura || 'S/N',
+      valorNuevo: validated.nroFactura || 'S/N',
     })
   }
 
   if (logs.length > 0) {
     await prisma.casoLog.createMany({
-      data: logs.map(l => ({ ...l, casoId: id }))
+      data: logs.map(l => ({ ...l, casoId: id, usuario: userName }))
     })
   }
 
@@ -115,7 +129,34 @@ export async function updateCaso(id: number, data: CasoFormData) {
 }
 
 export async function deleteCaso(id: number) {
+  await checkRole(['admin'])
   await prisma.caso.delete({ where: { id } })
+  revalidatePath('/casos')
+  return { success: true }
+}
+
+export async function bulkUpdateEstadoInterno(ids: number[], estado: EstadoInterno) {
+  await checkRole(['admin', 'operador'])
+  
+  await prisma.caso.updateMany({
+    where: { id: { in: ids } },
+    data: { estadoInterno: estado }
+  })
+
+  // Optional: Add logs for each case (more expensive but better audit)
+  // For now, updateMany is faster for large sets.
+  
+  revalidatePath('/casos')
+  return { success: true }
+}
+
+export async function bulkDeleteCasos(ids: number[]) {
+  await checkRole(['admin'])
+  
+  await prisma.caso.deleteMany({
+    where: { id: { in: ids } }
+  })
+
   revalidatePath('/casos')
   return { success: true }
 }

@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Briefcase, Users, LayoutDashboard, HeartPulse, Menu, X, LogOut, ShieldAlert, User } from 'lucide-react'
+import { Briefcase, Users, LayoutDashboard, HeartPulse, Menu, X, LogOut, ShieldAlert, User, FileText, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from './ThemeToggle'
+import { NotificationBell } from './NotificationBell'
 import { signOut, getCurrentUser } from '@/lib/actions/users'
 
 export function Sidebar() {
@@ -69,6 +70,11 @@ export function Sidebar() {
           </button>
         </div>
 
+        <div className="px-6 py-2 flex items-center justify-between border-b border-border bg-muted/10">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Notificaciones</p>
+          <NotificationBell />
+        </div>
+
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           <Link
             href="/"
@@ -100,6 +106,27 @@ export function Sidebar() {
             <Users className="w-4 h-4" />
             Corresponsales
           </Link>
+          <Link
+            href="/informes"
+            className={cn(
+              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
+              pathname.startsWith('/informes') ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+            )}
+          >
+            <FileText className="w-4 h-4" />
+            Informes Ejecutivos
+          </Link>
+
+          <Link
+            href="/perfil"
+            className={cn(
+              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
+              pathname === '/perfil' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+            )}
+          >
+            <User className="w-4 h-4" />
+            Mi Perfil
+          </Link>
 
           {user?.profile?.rol === 'admin' && (
             <>
@@ -116,13 +143,23 @@ export function Sidebar() {
                 <ShieldAlert className="w-4 h-4" />
                 Dpt. Usuarios
               </Link>
+              <Link
+                href="/admin/settings"
+                className={cn(
+                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
+                  pathname.startsWith('/admin/settings') ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                )}
+              >
+                <Settings className="w-4 h-4" />
+                Configuración
+              </Link>
             </>
           )}
         </nav>
 
         <div className="border-t border-border p-4 bg-muted/20">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
+            <Link href="/perfil" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
                 <User className="w-4 h-4 text-primary" />
               </div>
@@ -134,7 +171,7 @@ export function Sidebar() {
                   {user?.profile?.rol || '...'}
                 </span>
               </div>
-            </div>
+            </Link>
             <ThemeToggle />
           </div>
           

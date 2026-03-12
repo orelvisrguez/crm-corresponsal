@@ -12,11 +12,33 @@ export async function getCurrentUser() {
   
   if (!user) return null
 
-  const profile = await prisma.profile.findUnique({
+  let profile = await prisma.profile.findUnique({
     where: { id: user.id }
   })
 
+  // Auto-create profile if missing (helps with DB resets)
+  if (!profile) {
+    const isAdmin = user.email === 'orelvis.rguez@gmail.com'
+    profile = await prisma.profile.create({
+      data: {
+        id: user.id,
+        email: user.email!,
+        nombreCompleto: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuario',
+        rol: isAdmin ? 'admin' : 'visor',
+        estado: 'activo'
+      }
+    })
+  }
+
   return { ...user, profile }
+}
+
+export async function checkRole(requiredRoles: UserRole[]) {
+  const user = await getCurrentUser()
+  if (!user || !user.profile || !requiredRoles.includes(user.profile.rol)) {
+    throw new Error('No tiene permisos para realizar esta acción.')
+  }
+  return user
 }
 
 // Admin only: Get all users
@@ -45,6 +67,37 @@ export async function updateUser(id: string, data: { rol?: UserRole, estado?: Us
 
   revalidatePath('/admin/users')
   return updated
+}
+
+// User update their own profile
+export async function updateProfile(data: { nombreCompleto: string }) {
+  const user = await getCurrentUser()
+  if (!user) throw new Error('No autenticado')
+
+  const updated = await prisma.profile.update({
+    where: { id: user.id },
+    data: {
+      nombreCompleto: data.nombreCompleto
+    }
+  })
+
+  revalidatePath('/perfil')
+  revalidatePath('/')
+  return updated
+}
+
+// Admin only: Invite/Create user (Requires Service Role Key)
+export async function createAdminUser(data: { email: string, nombreCompleto: string, rol: UserRole }) {
+  const user = await getCurrentUser()
+  if (user?.profile?.rol !== 'admin') {
+    throw new Error('No autorizado')
+  }
+
+  // NOTE: This usually requires SUPABASE_SERVICE_ROLE_KEY to bypass email confirmation
+  // or use supabase.auth.admin.inviteUserByEmail.
+  // For now, we only create the profile and suggest the key is needed.
+  
+  throw new Error('La creación directa de usuarios requiere configurar la KEY de servicio de Supabase para omitir la confirmación de email.')
 }
 
 // Sign out action
