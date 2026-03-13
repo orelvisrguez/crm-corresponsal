@@ -212,11 +212,16 @@ export async function getDashboardAnalytics(dateRange?: { from: Date; to: Date }
   allCasos.forEach((c) => {
     if (c.pais) {
       if (!localMap[c.pais]) {
-        localMap[c.pais] = { totalLocal: 0, totalUsd: 0, symbol: c.simboloMonedaLocal || '—' }
+        localMap[c.pais] = { totalLocal: 0, totalUsd: 0, symbol: '—' }
       }
       localMap[c.pais].totalLocal += (c.costoMonedaLocal || 0)
-      localMap[c.pais].totalUsd += (c.costoUsd || 0)
-      if (c.simboloMonedaLocal && c.simboloMonedaLocal !== '—') {
+      // Use full revenue for the USD equivalent
+      localMap[c.pais].totalUsd += (c.costoUsd || 0) + (c.costoFee || 0) + (c.montoAgregado || 0)
+      
+      // Update symbol if we find a valid one
+      if (c.simboloMonedaLocal && c.simboloMonedaLocal !== '—' && c.simboloMonedaLocal !== 'USD') {
+        localMap[c.pais].symbol = c.simboloMonedaLocal
+      } else if (localMap[c.pais].symbol === '—' && c.simboloMonedaLocal) {
         localMap[c.pais].symbol = c.simboloMonedaLocal
       }
     }

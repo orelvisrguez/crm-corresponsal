@@ -375,8 +375,8 @@ export function AnalyticsCharts({ data }: Props) {
               <thead>
                 <tr className="border-b border-border bg-muted/20 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
                   <th className="px-6 py-4 text-left">País</th>
-                  <th className="px-6 py-4 text-right">Monto Moneda Local</th>
-                  <th className="px-6 py-4 text-right">Equivalente USD (Costo)</th>
+                  <th className="px-6 py-4 text-right">Gasto en Moneda Local</th>
+                  <th className="px-6 py-4 text-right">Equivalente USD (Total)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">
