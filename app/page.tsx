@@ -1,7 +1,6 @@
 import { getDashboardAnalytics, getActionCenterData, type DashboardAnalytics } from '@/lib/actions/analytics'
 import { AnalyticsCards } from './_components/AnalyticsCards'
 import { AnalyticsCharts } from './_components/AnalyticsCharts'
-import { AIExecutiveSummary } from './_components/AIExecutiveSummary'
 import { ActionCenter } from './_components/ActionCenter'
 import { DateRangePicker } from './_components/DateRangePicker'
 import OperationsMap from './_components/OperationsMap'
@@ -59,9 +58,6 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         
         <DateRangePicker />
       </div>
-
-      {/* 1. AI Insights (Top priority) */}
-      <AIExecutiveSummary data={analytics} />
 
       {/* 2. Key Metrics Cards */}
       <AnalyticsCards data={analytics} />
