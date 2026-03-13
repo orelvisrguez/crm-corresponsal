@@ -39,6 +39,7 @@ export interface DashboardAnalytics {
   pareto: { name: string; count: number; cumulativePercentage: number }[]
   mapData: { id: number; displayId?: string; lat: number; lng: number; country: string; cost: number; city?: string; status: string }[]
   allTimeMapData: { id: number; displayId?: string; lat: number; lng: number; country: string; cost: number; city?: string; status: string }[]
+  localCurrencyBreakdown: { country: string; symbol: string; totalLocal: number; totalUsd: number }[]
 }
 
 export async function getDashboardAnalytics(dateRange?: { from: Date; to: Date }) {
@@ -67,6 +68,8 @@ export async function getDashboardAnalytics(dateRange?: { from: Date; to: Date }
         costoUsd: true,
         costoFee: true,
         montoAgregado: true,
+        costoMonedaLocal: true,
+        simboloMonedaLocal: true,
         pais: true,
         corresponsalId: true,
         corresponsal: { select: { nombre: true } }
@@ -204,6 +207,30 @@ export async function getDashboardAnalytics(dateRange?: { from: Date; to: Date }
     }
   })
 
+  // 7. Local Currency Breakdown
+  const localMap: Record<string, { totalLocal: number; totalUsd: number; symbol: string }> = {}
+  allCasos.forEach((c) => {
+    if (c.pais) {
+      if (!localMap[c.pais]) {
+        localMap[c.pais] = { totalLocal: 0, totalUsd: 0, symbol: c.simboloMonedaLocal || '—' }
+      }
+      localMap[c.pais].totalLocal += (c.costoMonedaLocal || 0)
+      localMap[c.pais].totalUsd += (c.costoUsd || 0)
+      if (c.simboloMonedaLocal && c.simboloMonedaLocal !== '—') {
+        localMap[c.pais].symbol = c.simboloMonedaLocal
+      }
+    }
+  })
+
+  const localCurrencyBreakdown = Object.entries(localMap)
+    .map(([country, data]) => ({
+      country,
+      symbol: data.symbol,
+      totalLocal: data.totalLocal,
+      totalUsd: data.totalUsd
+    }))
+    .sort((a, b) => b.totalUsd - a.totalUsd)
+
   return {
     operational: { avgResolutionDays, documentationRate, agingCases15, agingCases30 },
     financial: { avgTicket, totalRevenue, revenueGrowth, pendingCollection, feeMargin, totalFee, totalCostoUsd, totalMontoAgregado },
@@ -247,7 +274,8 @@ export async function getDashboardAnalytics(dateRange?: { from: Date; to: Date }
         cost: c.costoUsd || 0,
         status: c.estadoCaso
       }
-    })
+    }),
+    localCurrencyBreakdown
   }
 }
 

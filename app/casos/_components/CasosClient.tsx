@@ -356,16 +356,6 @@ Para confirmar la eliminación masiva, escriba "ELIMINAR" a continuación:`
             <div className="hidden sm:flex items-center justify-center p-2 rounded-md bg-muted/50 border border-border/50 text-muted-foreground">
               <Filter className="w-4 h-4" />
             </div>
-            <select
-              value={filterEstadoInterno}
-              onChange={e => handleEIChange(e.target.value)}
-              className="text-sm border border-border rounded-lg px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-            >
-              <option value="all">Estado Interno</option>
-              {['Abierto', 'Cerrado', 'Pausado', 'Cancelado'].map(e => (
-                <option key={e} value={e}>{e}</option>
-              ))}
-            </select>
 
             <select
               value={filterEstadoCaso}
@@ -443,7 +433,7 @@ Para confirmar la eliminación masiva, escriba "ELIMINAR" a continuación:`
                     onChange={toggleSelectAll}
                   />
                 </th>
-                {['ID Assistravel', 'Corresponsal', 'País', 'Fecha Inicio', 'Costo', 'Fee', 'Monto Ag.', 'Total', 'Estado Interno', 'Estado Caso', 'Factura', 'Acciones'].map(h => (
+                {['ID Assistravel', 'Corresponsal', 'Fecha Inicio', 'Fee', 'Costo', 'Monto Ag.', 'Total', 'Estado Caso', 'Factura', 'Acciones'].map(h => (
                   <th key={h} className="px-4 py-3 text-left font-semibold text-muted-foreground whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -451,7 +441,7 @@ Para confirmar la eliminación masiva, escriba "ELIMINAR" a continuación:`
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={13} className="px-4 py-12 text-center text-muted-foreground">
+                  <td colSpan={11} className="px-4 py-12 text-center text-muted-foreground">
                     {hasFilters ? 'No hay casos que coincidan con los filtros.' : 'No hay casos registrados. Crea el primer caso.'}
                   </td>
                 </tr>
@@ -476,24 +466,18 @@ Para confirmar la eliminación masiva, escriba "ELIMINAR" a continuación:`
                       {caso.idCasoAssistravel}
                     </td>
                     <td className="px-4 py-3 text-foreground whitespace-nowrap font-medium">{caso.corresponsal.nombre}</td>
-                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{caso.pais ?? '—'}</td>
                     <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(caso.fechaInicio)}</td>
-                    <td className="px-4 py-3 text-foreground whitespace-nowrap font-mono text-xs font-bold">
-                      {formatCurrency(caso.costoUsd, 'USD')}
-                    </td>
                     <td className="px-4 py-3 text-foreground whitespace-nowrap font-mono text-xs">
                       {formatCurrency(caso.costoFee, 'USD')}
+                    </td>
+                    <td className="px-4 py-3 text-foreground whitespace-nowrap font-mono text-xs font-bold">
+                      {formatCurrency(caso.costoUsd, 'USD')}
                     </td>
                     <td className="px-4 py-3 text-foreground whitespace-nowrap font-mono text-xs italic">
                       {formatCurrency(caso.montoAgregado, 'USD')}
                     </td>
                     <td className="px-4 py-3 text-primary whitespace-nowrap font-mono text-xs font-black">
                       {formatCurrency((caso.costoUsd ?? 0) + (caso.costoFee ?? 0) + (caso.montoAgregado ?? 0), 'USD')}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className={cn('inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border', ESTADO_INTERNO_COLORS[caso.estadoInterno])}>
-                        {caso.estadoInterno}
-                      </span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <span className={cn('inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border', ESTADO_CASO_COLORS[caso.estadoCaso])}>

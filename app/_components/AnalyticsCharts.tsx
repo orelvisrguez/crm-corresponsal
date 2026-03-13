@@ -363,7 +363,48 @@ export function AnalyticsCharts({ data }: Props) {
         </CardContent>
       </Card>
 
-      {/* 6. Heatmap style Cost Distribution */}
+      {/* 6. Local Currency Table */}
+      <Card className="shadow-sm border-border/50 bg-card overflow-hidden lg:col-span-2">
+        <CardHeader className="bg-muted/10 border-b border-border/50 pb-4">
+          <CardTitle className="text-sm font-bold">Resumen de Costos en Moneda Local</CardTitle>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Distribución financiera por divisa regional</p>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/20 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+                  <th className="px-6 py-4 text-left">País</th>
+                  <th className="px-6 py-4 text-right">Monto Moneda Local</th>
+                  <th className="px-6 py-4 text-right">Equivalente USD (Costo)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/40">
+                {data.localCurrencyBreakdown.map((item) => (
+                  <tr key={item.country} className="hover:bg-muted/30 transition-colors group">
+                    <td className="px-6 py-4 font-bold text-foreground">{item.country}</td>
+                    <td className="px-6 py-4 text-right font-mono text-primary font-black">
+                      {item.symbol} {item.totalLocal.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-6 py-4 text-right font-mono text-muted-foreground">
+                      {formatCurrency(item.totalUsd)}
+                    </td>
+                  </tr>
+                ))}
+                {data.localCurrencyBreakdown.length === 0 && (
+                  <tr>
+                    <td colSpan={3} className="px-6 py-12 text-center text-muted-foreground italic">
+                      No hay datos de moneda local registrados.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 7. Heatmap style Cost Distribution */}
       <Card className="shadow-sm border-border/50 bg-card overflow-hidden lg:col-span-2">
         <CardHeader className="bg-muted/10 border-b border-border/50 pb-4">
           <CardTitle className="text-sm font-bold">Mapa de Calor: Intensidad de Gasto por País</CardTitle>
