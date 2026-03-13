@@ -150,6 +150,37 @@ export function AnalyticsCards({ data }: Props) {
           trendType="negative"
         />
       </div>
+
+      {/* Row 3 - Financial Breakdown */}
+      <div className="lg:col-span-4 mt-2">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-1 h-4 bg-emerald-500 rounded-full" />
+          <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Desglose Financiero (Totales)</h3>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <MetricCard 
+            title="Total Fee"
+            value={formatCurrency(data.financial.totalFee)}
+            description="Suma total de honorarios"
+            icon={Zap}
+            color="primary"
+          />
+          <MetricCard 
+            title="Total Costo USD"
+            value={formatCurrency(data.financial.totalCostoUsd)}
+            description="Suma total de costos operativos"
+            icon={DollarSign}
+            color="emerald"
+          />
+          <MetricCard 
+            title="Total Monto Agregado"
+            value={formatCurrency(data.financial.totalMontoAgregado)}
+            description="Suma total de montos adicionales"
+            icon={TrendingUp}
+            color="amber"
+          />
+        </div>
+      </div>
     </div>
   )
 }

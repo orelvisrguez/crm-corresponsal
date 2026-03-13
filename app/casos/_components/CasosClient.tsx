@@ -314,7 +314,7 @@ Para confirmar la eliminación masiva, escriba "ELIMINAR" a continuación:`
 
   const statsOpen = casos.filter(c => c.estadoInterno === 'Abierto').length
   const statsClosed = casos.filter(c => c.estadoInterno === 'Cerrado').length
-  const totalUsd = casos.reduce((acc, c) => acc + (c.costoUsd ?? 0), 0)
+  const totalRevenue = casos.reduce((acc, c) => acc + (c.costoUsd ?? 0) + (c.costoFee ?? 0) + (c.montoAgregado ?? 0), 0)
 
   if (!isMounted) return <div className="p-12 text-center text-muted-foreground">Cargando...</div>
 
@@ -326,7 +326,7 @@ Para confirmar la eliminación masiva, escriba "ELIMINAR" a continuación:`
           { label: 'Total Casos', value: casos.length, color: 'from-blue-600 to-cyan-500' },
           { label: 'Abiertos', value: statsOpen, color: 'from-emerald-600 to-teal-500' },
           { label: 'Cerrados', value: statsClosed, color: 'from-slate-600 to-slate-500' },
-          { label: 'Total USD', value: `$${totalUsd.toLocaleString('es-AR', { minimumFractionDigits: 0 })}`, color: 'from-violet-600 to-indigo-500' },
+          { label: 'Total Revenue', value: `$${totalRevenue.toLocaleString('es-AR', { minimumFractionDigits: 0 })}`, color: 'from-violet-600 to-indigo-500' },
         ].map(stat => (
           <div key={stat.label} className="bg-card border border-border rounded-xl p-4 relative overflow-hidden">
             <div className={cn('absolute top-0 right-0 w-24 h-24 opacity-10 rounded-full -translate-y-6 translate-x-6 bg-gradient-to-br', stat.color)} />
@@ -443,7 +443,7 @@ Para confirmar la eliminación masiva, escriba "ELIMINAR" a continuación:`
                     onChange={toggleSelectAll}
                   />
                 </th>
-                {['ID Assistravel', 'Corresponsal', 'País', 'Fecha Inicio', 'USD', 'Fee', 'Estado Interno', 'Estado Caso', 'Factura', 'Acciones'].map(h => (
+                {['ID Assistravel', 'Corresponsal', 'País', 'Fecha Inicio', 'Costo', 'Fee', 'Monto Ag.', 'Total', 'Estado Interno', 'Estado Caso', 'Factura', 'Acciones'].map(h => (
                   <th key={h} className="px-4 py-3 text-left font-semibold text-muted-foreground whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -451,7 +451,7 @@ Para confirmar la eliminación masiva, escriba "ELIMINAR" a continuación:`
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="px-4 py-12 text-center text-muted-foreground">
+                  <td colSpan={13} className="px-4 py-12 text-center text-muted-foreground">
                     {hasFilters ? 'No hay casos que coincidan con los filtros.' : 'No hay casos registrados. Crea el primer caso.'}
                   </td>
                 </tr>
@@ -483,6 +483,12 @@ Para confirmar la eliminación masiva, escriba "ELIMINAR" a continuación:`
                     </td>
                     <td className="px-4 py-3 text-foreground whitespace-nowrap font-mono text-xs">
                       {formatCurrency(caso.costoFee, 'USD')}
+                    </td>
+                    <td className="px-4 py-3 text-foreground whitespace-nowrap font-mono text-xs italic">
+                      {formatCurrency(caso.montoAgregado, 'USD')}
+                    </td>
+                    <td className="px-4 py-3 text-primary whitespace-nowrap font-mono text-xs font-black">
+                      {formatCurrency((caso.costoUsd ?? 0) + (caso.costoFee ?? 0) + (caso.montoAgregado ?? 0), 'USD')}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <span className={cn('inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border', ESTADO_INTERNO_COLORS[caso.estadoInterno])}>

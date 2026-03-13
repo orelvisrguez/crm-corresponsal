@@ -77,6 +77,10 @@ export function AnalyticsCharts({ data }: Props) {
                     <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
                     <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                   </linearGradient>
+                  <linearGradient id="colorAgregado" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.1}/>
+                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
+                  </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis 
@@ -111,6 +115,15 @@ export function AnalyticsCharts({ data }: Props) {
                   strokeWidth={2}
                   fillOpacity={1} 
                   fill="url(#colorFee)" 
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="montoAgregado" 
+                  name="Monto Agregado"
+                  stroke="#f59e0b" 
+                  strokeWidth={2}
+                  fillOpacity={1} 
+                  fill="url(#colorAgregado)" 
                 />
               </AreaChart>
             </ResponsiveContainer>

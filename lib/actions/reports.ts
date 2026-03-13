@@ -31,6 +31,8 @@ export async function getExecutiveReportData() {
   const casosAbiertos = casos.filter((c) => c.estadoInterno === 'Abierto').length
   const costoTotalUsd = casos.reduce((acc: number, c) => acc + (c.costoUsd || 0), 0)
   const feeTotalUsd = casos.reduce((acc: number, c) => acc + (c.costoFee || 0), 0)
+  const montoAgregadoTotalUsd = casos.reduce((acc: number, c) => acc + (c.montoAgregado || 0), 0)
+  const revenueTotal = costoTotalUsd + feeTotalUsd + montoAgregadoTotalUsd
   
   const topCorresponsales = corresponsales
     .sort((a, b) => (b._count?.casos || 0) - (a._count?.casos || 0))
@@ -45,6 +47,8 @@ export async function getExecutiveReportData() {
       casosAbiertos,
       costoTotalUsd,
       feeTotalUsd,
+      montoAgregadoTotalUsd,
+      revenueTotal,
       totalCorresponsales: corresponsales.length
     },
     topCorresponsales,
@@ -64,8 +68,8 @@ export async function generateAIReport(type: ReportType) {
       Datos: ${JSON.stringify(data.summary)}. 
       REQUERIMIENTOS:
       - Título impactante.
-      - Tabla markdown con las métricas clave.
-      - Análisis de rentabilidad comparando Costos vs Fees.
+      - Tabla markdown con las métricas clave: Casos, Costos, Fees, Monto Agregado y Revenue Total (Suma de los 3).
+      - Análisis de rentabilidad comparando Costos vs Fees vs Monto Agregado.
       - Proyecciones estratégicas.
       - Usa blockquotes (>) para conclusiones críticas.`,
     operativo: `Genera un INFORME OPERATIVO EJECUTIVO de alta dirección. 
@@ -77,11 +81,11 @@ export async function generateAIReport(type: ReportType) {
       - Análisis de cobertura geográfica en ${data.countries.length} países.
       - Sección de eficiencia operativa.`,
     financiero: `Genera un INFORME FINANCIERO EJECUTIVO de alta dirección. 
-      Datos: Costos USD: ${data.summary.costoTotalUsd}, Fees USD: ${data.summary.feeTotalUsd}. 
+      Datos: Costos USD: ${data.summary.costoTotalUsd}, Fees USD: ${data.summary.feeTotalUsd}, Monto Agregado USD: ${data.summary.montoAgregadoTotalUsd}, Revenue Total: ${data.summary.revenueTotal}. 
       REQUERIMIENTOS:
       - Título formal.
       - Análisis de márgenes brutos (relación fee/costo).
-      - Tabla markdown comparativa.
+      - Tabla markdown comparativa de los 3 componentes financieros.
       - Proyecciones de flujo y liquidez operativa.
       - Recomendaciones de optimización.`,
     contable: `Genera un INFORME CONTABLE EJECUTIVO de alta dirección. 

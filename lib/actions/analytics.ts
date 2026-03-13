@@ -17,6 +17,9 @@ export interface DashboardAnalytics {
     revenueGrowth: number
     pendingCollection: number
     feeMargin: number
+    totalFee: number
+    totalCostoUsd: number
+    totalMontoAgregado: number
   }
   pipeline: {
     onGoing: number
@@ -30,7 +33,7 @@ export interface DashboardAnalytics {
     collected: number
   }
   topCountries: { country: string; cost: number }[]
-  monthlyTrend: { month: string; year: number; costUsd: number; fee: number }[]
+  monthlyTrend: { month: string; year: number; costUsd: number; fee: number; montoAgregado: number }[]
   concentration: { name: string; value: number }[]
   momVolume: { day: string; current: number; previous: number }[]
   pareto: { name: string; count: number; cumulativePercentage: number }[]
@@ -93,16 +96,17 @@ export async function getDashboardAnalytics(dateRange?: { from: Date; to: Date }
   const agingCases30 = allCasos.filter((c) => c.estadoInterno !== 'Cerrado' && c.fechaInicio && differenceInDays(now, new Date(c.fechaInicio)) > 30).length
 
   // 2. Financial Metrics
-  const totalRevenue = allCasos.reduce((acc: number, c) => acc + (c.costoUsd || 0) + (c.costoFee || 0), 0)
+  const totalRevenue = allCasos.reduce((acc: number, c) => acc + (c.costoUsd || 0) + (c.costoFee || 0) + (c.montoAgregado || 0), 0)
   const avgTicket = allCasos.length > 0 ? totalRevenue / allCasos.length : 0
   
   const pendingCollection = allCasos
     .filter((c) => c.estadoCaso === 'ParaRefacturar' || c.estadoCaso === 'Refacturado')
-    .reduce((acc: number, c) => acc + (c.costoUsd || 0) + (c.costoFee || 0), 0)
+    .reduce((acc: number, c) => acc + (c.costoUsd || 0) + (c.costoFee || 0) + (c.montoAgregado || 0), 0)
     
   const totalCostoUsd = allCasos.reduce((acc: number, c) => acc + (c.costoUsd || 0), 0)
   const totalFee = allCasos.reduce((acc: number, c) => acc + (c.costoFee || 0), 0)
-  const feeMargin = totalCostoUsd > 0 ? (totalFee / totalCostoUsd) * 100 : 0
+  const totalMontoAgregado = allCasos.reduce((acc: number, c) => acc + (c.montoAgregado || 0), 0)
+  const feeMargin = totalCostoUsd > 0 ? ((totalFee + totalMontoAgregado) / totalCostoUsd) * 100 : 0
 
   // Growth (MoM) - This requires fetching last month data if not range filtered
   let revenueGrowth = 0
@@ -114,9 +118,9 @@ export async function getDashboardAnalytics(dateRange?: { from: Date; to: Date }
           lte: endOfMonth(subMonths(now, 1))
         }
       },
-      select: { costoUsd: true, costoFee: true }
+      select: { costoUsd: true, costoFee: true, montoAgregado: true }
     })
-    const lastMonthRevenue = lastMonthCasos.reduce((acc: number, c) => acc + (c.costoUsd || 0) + (c.costoFee || 0), 0)
+    const lastMonthRevenue = lastMonthCasos.reduce((acc: number, c) => acc + (c.costoUsd || 0) + (c.costoFee || 0) + (c.montoAgregado || 0), 0)
     revenueGrowth = lastMonthRevenue > 0 ? ((totalRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 : 0
   }
 
@@ -158,7 +162,8 @@ export async function getDashboardAnalytics(dateRange?: { from: Date; to: Date }
       month: mStart.toLocaleString('default', { month: 'short' }),
       year: mStart.getFullYear(),
       costUsd: mCasos.reduce((acc: number, c) => acc + (c.costoUsd || 0), 0),
-      fee: mCasos.reduce((acc: number, c) => acc + (c.costoFee || 0), 0)
+      fee: mCasos.reduce((acc: number, c) => acc + (c.costoFee || 0), 0),
+      montoAgregado: mCasos.reduce((acc: number, c) => acc + (c.montoAgregado || 0), 0)
     })
   }
 
@@ -201,11 +206,11 @@ export async function getDashboardAnalytics(dateRange?: { from: Date; to: Date }
 
   return {
     operational: { avgResolutionDays, documentationRate, agingCases15, agingCases30 },
-    financial: { avgTicket, totalRevenue, revenueGrowth, pendingCollection, feeMargin },
+    financial: { avgTicket, totalRevenue, revenueGrowth, pendingCollection, feeMargin, totalFee, totalCostoUsd, totalMontoAgregado },
     pipeline: { 
-      onGoing: allCasos.filter((c) => c.estadoCaso === 'OnGoing').reduce((acc: number, c) => acc + (c.costoUsd || 0), 0),
+      onGoing: allCasos.filter((c) => c.estadoCaso === 'OnGoing').reduce((acc: number, c) => acc + (c.costoUsd || 0) + (c.costoFee || 0) + (c.montoAgregado || 0), 0),
       toInvoice: pendingCollection,
-      collected: allCasos.filter((c) => c.estadoCaso === 'Cobrado').reduce((acc: number, c) => acc + (c.costoUsd || 0), 0)
+      collected: allCasos.filter((c) => c.estadoCaso === 'Cobrado').reduce((acc: number, c) => acc + (c.costoUsd || 0) + (c.costoFee || 0) + (c.montoAgregado || 0), 0)
     },
     funnel,
     topCountries,
