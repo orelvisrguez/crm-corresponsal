@@ -91,6 +91,7 @@ export function CasoDialog({ open, onClose, caso, corresponsales, onSuccess }: P
       costoUsd: 0,
       montoAgregado: 0,
       costoMonedaLocal: 0,
+      tipoServicio: '',
     }
   })
   
@@ -103,6 +104,7 @@ export function CasoDialog({ open, onClose, caso, corresponsales, onSuccess }: P
         idCasoCorresponsal: caso.idCasoCorresponsal ?? undefined,
         fechaInicio: caso.fechaInicio ? new Date(caso.fechaInicio).toISOString().split('T')[0] : '',
         pais: caso.pais ?? undefined,
+        tipoServicio: caso.tipoServicio ?? '',
         costoFee: caso.costoFee ?? 0,
         costoUsd: caso.costoUsd ?? 0,
         montoAgregado: caso.montoAgregado ?? 0,
@@ -142,7 +144,8 @@ export function CasoDialog({ open, onClose, caso, corresponsales, onSuccess }: P
         fechaEmiFact: '',
         fechaVtoFact: '',
         fechaPagFact: '',
-        observaciones: ''
+        observaciones: '',
+        tipoServicio: ''
       })
       setTipoCambio(1)
       setIsManualLocal(false) // New cases start with auto-calculation
@@ -254,16 +257,22 @@ export function CasoDialog({ open, onClose, caso, corresponsales, onSuccess }: P
                 <FieldLabel>Fecha de Inicio</FieldLabel>
                 <Input type="date" {...register('fechaInicio')} />
               </div>
-              <div>
-                <FieldLabel>País</FieldLabel>
-                <Input 
-                  placeholder="Buscar o escribir país..." 
-                  {...register('pais')} 
-                  list="countries-list"
-                />
-                <datalist id="countries-list">
-                  {PAISES.map(p => <option key={p} value={p} />)}
-                </datalist>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <FieldLabel>País</FieldLabel>
+                  <Input 
+                    placeholder="Buscar o escribir país..." 
+                    {...register('pais')} 
+                    list="countries-list"
+                  />
+                  <datalist id="countries-list">
+                    {PAISES.map(p => <option key={p} value={p} />)}
+                  </datalist>
+                </div>
+                <div>
+                  <FieldLabel>Tipo de Servicio (Patología)</FieldLabel>
+                  <Input placeholder="Ej: Traumatología, Consulta..." {...register('tipoServicio')} />
+                </div>
               </div>
             </div>
           </section>

@@ -109,6 +109,7 @@ export async function importCasosFromExcel(formData: FormData) {
         idCasoCorresponsal: row.IdCasoCorresponsal ? String(row.IdCasoCorresponsal) : null,
         fechaInicio: parseDate(row.FechaInicio),
         pais: row.Pais ? String(row.Pais) : null,
+        tipoServicio: row.TipoServicio ? String(row.TipoServicio) : null,
         costoFee: row.CostoFee ? parseFloat(String(row.CostoFee)) : 0,
         costoUsd: row.CostoUsd ? parseFloat(String(row.CostoUsd)) : 0,
         montoAgregado: row.MontoAgregado ? parseFloat(String(row.MontoAgregado)) : 0,

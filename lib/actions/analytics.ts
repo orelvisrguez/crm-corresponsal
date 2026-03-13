@@ -10,6 +10,8 @@ export interface DashboardAnalytics {
     documentationRate: number
     agingCases15: number
     agingCases30: number
+    serviceDistribution: { name: string; value: number }[]
+    slaByCorrespondent: { name: string; rate: number }[]
   }
   financial: {
     avgTicket: number
@@ -40,6 +42,16 @@ export interface DashboardAnalytics {
   mapData: { id: number; displayId?: string; lat: number; lng: number; country: string; cost: number; city?: string; status: string }[]
   allTimeMapData: { id: number; displayId?: string; lat: number; lng: number; country: string; cost: number; city?: string; status: string }[]
   localCurrencyBreakdown: { country: string; symbol: string; totalLocal: number; totalUsd: number }[]
+  correspondentFinancials: { 
+    id: string; 
+    name: string; 
+    casos: number; 
+    costoUsd: number; 
+    fee: number; 
+    montoAgregado: number; 
+    total: number;
+    margin: number;
+  }[]
 }
 
 export async function getDashboardAnalytics(dateRange?: { from: Date; to: Date }) {
@@ -71,6 +83,7 @@ export async function getDashboardAnalytics(dateRange?: { from: Date; to: Date }
         costoMonedaLocal: true,
         simboloMonedaLocal: true,
         pais: true,
+        tipoServicio: true,
         corresponsalId: true,
         corresponsal: { select: { nombre: true } }
       }
@@ -97,6 +110,28 @@ export async function getDashboardAnalytics(dateRange?: { from: Date; to: Date }
 
   const agingCases15 = allCasos.filter((c) => c.estadoInterno !== 'Cerrado' && c.fechaInicio && differenceInDays(now, new Date(c.fechaInicio)) > 15).length
   const agingCases30 = allCasos.filter((c) => c.estadoInterno !== 'Cerrado' && c.fechaInicio && differenceInDays(now, new Date(c.fechaInicio)) > 30).length
+
+  // New Operational Metrics
+  const serviceMap: Record<string, number> = {}
+  allCasos.forEach(c => {
+    const service = c.tipoServicio || 'Otros'
+    serviceMap[service] = (serviceMap[service] || 0) + 1
+  })
+  const serviceDistribution = Object.entries(serviceMap)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
+
+  const slaMap: Record<string, { total: number, withInfo: number, name: string }> = {}
+  allCasos.forEach(c => {
+    const id = c.corresponsalId
+    if (!slaMap[id]) slaMap[id] = { total: 0, withInfo: 0, name: c.corresponsal?.nombre || 'Unknown' }
+    slaMap[id].total++
+    if (c.informeMedico) slaMap[id].withInfo++
+  })
+  const slaByCorrespondent = Object.values(slaMap)
+    .map(v => ({ name: v.name, rate: v.total > 0 ? (v.withInfo / v.total) * 100 : 0 }))
+    .sort((a, b) => b.rate - a.rate)
+    .slice(0, 10)
 
   // 2. Financial Metrics
   const totalRevenue = allCasos.reduce((acc: number, c) => acc + (c.costoUsd || 0) + (c.costoFee || 0) + (c.montoAgregado || 0), 0)
@@ -237,7 +272,7 @@ export async function getDashboardAnalytics(dateRange?: { from: Date; to: Date }
     .sort((a, b) => b.totalUsd - a.totalUsd)
 
   return {
-    operational: { avgResolutionDays, documentationRate, agingCases15, agingCases30 },
+    operational: { avgResolutionDays, documentationRate, agingCases15, agingCases30, serviceDistribution, slaByCorrespondent },
     financial: { avgTicket, totalRevenue, revenueGrowth, pendingCollection, feeMargin, totalFee, totalCostoUsd, totalMontoAgregado },
     pipeline: { 
       onGoing: allCasos.filter((c) => c.estadoCaso === 'OnGoing').reduce((acc: number, c) => acc + (c.costoUsd || 0) + (c.costoFee || 0) + (c.montoAgregado || 0), 0),
@@ -280,7 +315,26 @@ export async function getDashboardAnalytics(dateRange?: { from: Date; to: Date }
         status: c.estadoCaso
       }
     }),
-    localCurrencyBreakdown
+    localCurrencyBreakdown,
+    correspondentFinancials: (() => {
+      const corMap: Record<string, { id: string, name: string, casos: number, costoUsd: number, fee: number, montoAgregado: number }> = {}
+      allCasos.forEach(c => {
+        const id = c.corresponsalId
+        const name = c.corresponsal?.nombre || 'Unknown'
+        if (!corMap[id]) {
+          corMap[id] = { id, name, casos: 0, costoUsd: 0, fee: 0, montoAgregado: 0 }
+        }
+        corMap[id].casos += 1
+        corMap[id].costoUsd += (c.costoUsd || 0)
+        corMap[id].fee += (c.costoFee || 0)
+        corMap[id].montoAgregado += (c.montoAgregado || 0)
+      })
+      return Object.values(corMap).map(v => {
+        const total = v.costoUsd + v.fee + v.montoAgregado
+        const margin = v.costoUsd > 0 ? ((v.fee + v.montoAgregado) / v.costoUsd) * 100 : 0
+        return { ...v, total, margin }
+      }).sort((a, b) => b.total - a.total)
+    })()
   }
 }
 

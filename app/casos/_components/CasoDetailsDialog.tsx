@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { Caso, Corresponsal, CasoLog } from '@prisma/client'
-import { X, Calendar, Globe, DollarSign, FileText, Info, Clock, CheckCircle2, AlertCircle, TrendingUp, History, ArrowRight, Pencil } from 'lucide-react'
+import { X, Calendar, Globe, DollarSign, FileText, Info, Clock, CheckCircle2, AlertCircle, TrendingUp, History, ArrowRight, Pencil, Stethoscope } from 'lucide-react'
 import { cn, formatDate, formatCurrency, ESTADO_CASO_LABELS, ESTADO_INTERNO_COLORS, ESTADO_CASO_COLORS } from '@/lib/utils'
 
 type CasoWithCorresponsal = Caso & { 
@@ -76,6 +76,7 @@ export function CasoDetailsDialog({ open, onClose, onEdit, caso }: Props) {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 <DetailItem label="Corresponsal" value={caso.corresponsal.nombre} icon={Globe} />
                 <DetailItem label="País" value={caso.pais} icon={Globe} />
+                <DetailItem label="Tipo de Servicio" value={caso.tipoServicio} icon={Stethoscope} />
                 <DetailItem label="ID Assistravel" value={caso.idCasoAssistravel} className="font-mono" />
                 <DetailItem label="ID Corresponsal" value={caso.idCasoCorresponsal} className="font-mono" />
                 <DetailItem label="Fecha de Inicio" value={formatDate(caso.fechaInicio)} icon={Calendar} />

@@ -26,6 +26,7 @@ export const casoSchema = z.object({
   idCasoCorresponsal: z.string().optional(),
   fechaInicio: z.string().optional(),
   pais: z.string().optional(),
+  tipoServicio: z.string().optional(),
   costoFee: z.number().optional(),
   costoUsd: z.number().optional(),
   montoAgregado: z.number().optional(),

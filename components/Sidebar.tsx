@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Briefcase, Users, LayoutDashboard, HeartPulse, Menu, X, LogOut, ShieldAlert, User, FileText, Settings } from 'lucide-react'
+import { Briefcase, Users, LayoutDashboard, HeartPulse, Menu, X, LogOut, ShieldAlert, User, FileText, Settings, Landmark } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from './ThemeToggle'
 import { NotificationBell } from './NotificationBell'
@@ -109,6 +109,17 @@ export function Sidebar() {
           >
             <Users className="w-4 h-4" />
             Corresponsales
+          </Link>
+          <Link
+            href="/finanzas"
+            onClick={closeSidebar}
+            className={cn(
+              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
+              pathname.startsWith('/finanzas') ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+            )}
+          >
+            <Landmark className="w-4 h-4" />
+            Inteligencia
           </Link>
           <Link
             href="/informes"

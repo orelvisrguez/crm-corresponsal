@@ -88,6 +88,7 @@ export async function updateCaso(id: number, data: CasoFormData) {
     { key: 'idCasoCorresponsal', label: 'ID_CORRESPONSAL' },
     { key: 'corresponsalId', label: 'CORRESPONSAL' },
     { key: 'pais', label: 'PAIS' },
+    { key: 'tipoServicio', label: 'TIPO_SERVICIO' },
     { key: 'costoUsd', label: 'COSTO_USD' },
     { key: 'costoFee', label: 'COSTO_FEE' },
   ] as const

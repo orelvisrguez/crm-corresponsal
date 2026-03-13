@@ -35,6 +35,7 @@ model Caso {
   idCasoCorresponsal String?
   fechaInicio        DateTime?
   pais               String?
+  tipoServicio       String?
   costoFee           Float?        @default(0)
   costoUsd           Float?        @default(0)
   montoAgregado      Float?        @default(0)
