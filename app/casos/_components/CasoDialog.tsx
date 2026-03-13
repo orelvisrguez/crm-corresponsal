@@ -77,6 +77,7 @@ export function CasoDialog({ open, onClose, caso, corresponsales, onSuccess }: P
   const [isPending, startTransition] = useTransition()
   const [tipoCambio, setTipoCambio] = useState<number>(1)
   const [isFetchingRate, setIsFetchingRate] = useState(false)
+  const [isManualLocal, setIsManualLocal] = useState(false)
   const isEdit = !!caso
 
   const { register, handleSubmit, watch, setValue, reset, formState: { errors } } = useForm<CasoFormData>({
@@ -119,6 +120,7 @@ export function CasoDialog({ open, onClose, caso, corresponsales, onSuccess }: P
         observaciones: caso.observaciones ?? undefined,
       })
       if (caso.tasaCambio) setTipoCambio(caso.tasaCambio)
+      setIsManualLocal(true) // Treat existing cases as manual to avoid overwriting their values
     } else {
       reset({
         corresponsalId: '',
@@ -143,6 +145,7 @@ export function CasoDialog({ open, onClose, caso, corresponsales, onSuccess }: P
         observaciones: ''
       })
       setTipoCambio(1)
+      setIsManualLocal(false) // New cases start with auto-calculation
     }
   }, [caso, reset, open])
 
@@ -161,6 +164,8 @@ export function CasoDialog({ open, onClose, caso, corresponsales, onSuccess }: P
         if (result.currency) {
           setValue('simboloMonedaLocal', result.currency)
         }
+        // When fetching a new rate, we usually want to recalculate
+        setIsManualLocal(false)
       }
     } catch (err) {
       console.error('Error fetching rate:', err)
@@ -176,12 +181,14 @@ export function CasoDialog({ open, onClose, caso, corresponsales, onSuccess }: P
     }
   }, [currentPais, isEdit, handleFetchRate])
 
-  // Auto-calculate local currency when USD or rate changes
+  // Auto-calculate local currency when USD or rate changes (only if NOT in manual mode)
   useEffect(() => {
-    const usd = parseFloat(String(costUsd)) || 0
-    setValue('costoMonedaLocal', parseFloat((usd * tipoCambio).toFixed(2)))
+    if (!isManualLocal) {
+      const usd = parseFloat(String(costUsd)) || 0
+      setValue('costoMonedaLocal', parseFloat((usd * tipoCambio).toFixed(2)))
+    }
     setValue('tasaCambio', tipoCambio)
-  }, [costUsd, tipoCambio, setValue])
+  }, [costUsd, tipoCambio, setValue, isManualLocal])
 
   const onSubmit = (data: CasoFormData) => {
     startTransition(async () => {
@@ -314,7 +321,13 @@ export function CasoDialog({ open, onClose, caso, corresponsales, onSuccess }: P
                 </div>
                 <div>
                   <FieldLabel>Costo Moneda Local</FieldLabel>
-                  <Input type="number" step="0.01" placeholder="0.00" {...register('costoMonedaLocal', { valueAsNumber: true })} />
+                  <Input 
+                    type="number" 
+                    step="0.01" 
+                    placeholder="0.00" 
+                    {...register('costoMonedaLocal', { valueAsNumber: true })} 
+                    onKeyDown={() => setIsManualLocal(true)}
+                  />
                 </div>
                 <button
                   type="button"
