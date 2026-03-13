@@ -14,6 +14,7 @@ const Popup = dynamic(() => import('react-leaflet').then((mod) => mod.Popup), { 
 
 interface MapPin {
   id: number
+  displayId?: string
   lat: number
   lng: number
   country: string
@@ -116,7 +117,7 @@ export default function OperationsMap({ pins }: Props) {
                     </span>
                   </div>
                   <div className="text-sm font-black text-slate-800">
-                    ID: {pin.id}
+                    ID: {pin.displayId || pin.id}
                   </div>
                   <div className="text-sm font-bold text-primary mt-1">
                     Costo: {formatCurrency(pin.cost)}

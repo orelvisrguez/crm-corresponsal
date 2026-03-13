@@ -1,6 +1,8 @@
 import { ReportGenerator } from './_components/ReportGenerator'
 import { Sparkles } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export default function InformesPage() {
   return (
     <div className="space-y-6">

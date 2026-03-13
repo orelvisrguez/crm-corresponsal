@@ -73,7 +73,7 @@ export default async function DashboardPage({ searchParams }: PageProps) {
            <h2 className="text-lg font-bold text-foreground">Visualizaciones Operativas</h2>
         </div>
         
-        <OperationsMap pins={analytics.mapData} />
+        <OperationsMap pins={analytics.allTimeMapData} />
         
         <AnalyticsCharts data={analytics} />
       </div>

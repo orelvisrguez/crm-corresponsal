@@ -34,13 +34,15 @@ export interface DashboardAnalytics {
   concentration: { name: string; value: number }[]
   momVolume: { day: string; current: number; previous: number }[]
   pareto: { name: string; count: number; cumulativePercentage: number }[]
-  mapData: { id: number; lat: number; lng: number; country: string; cost: number; city?: string; status: string }[]
+  mapData: { id: number; displayId?: string; lat: number; lng: number; country: string; cost: number; city?: string; status: string }[]
+  allTimeMapData: { id: number; displayId?: string; lat: number; lng: number; country: string; cost: number; city?: string; status: string }[]
 }
 
 export async function getDashboardAnalytics(dateRange?: { from: Date; to: Date }) {
   const now = new Date()
   const lastMonthStart = startOfMonth(subMonths(now, 1))
   
+  // Cases for filtered metrics
   const where = dateRange ? {
     fechaInicio: {
       gte: dateRange.from,
@@ -48,23 +50,35 @@ export async function getDashboardAnalytics(dateRange?: { from: Date; to: Date }
     }
   } : {}
 
-  const allCasos = await prisma.caso.findMany({
-    where,
-    select: {
-      id: true,
-      fechaInicio: true,
-      updatedAt: true,
-      estadoInterno: true,
-      estadoCaso: true,
-      informeMedico: true,
-      costoUsd: true,
-      costoFee: true,
-      montoAgregado: true,
-      pais: true,
-      corresponsalId: true,
-      corresponsal: { select: { nombre: true } }
-    }
-  })
+  const [allCasos, allCasosGlobal] = await Promise.all([
+    prisma.caso.findMany({
+      where,
+      select: {
+        id: true,
+        idCasoAssistravel: true,
+        fechaInicio: true,
+        updatedAt: true,
+        estadoInterno: true,
+        estadoCaso: true,
+        informeMedico: true,
+        costoUsd: true,
+        costoFee: true,
+        montoAgregado: true,
+        pais: true,
+        corresponsalId: true,
+        corresponsal: { select: { nombre: true } }
+      }
+    }),
+    prisma.caso.findMany({
+      select: {
+        id: true,
+        idCasoAssistravel: true,
+        pais: true,
+        costoUsd: true,
+        estadoCaso: true,
+      }
+    })
+  ])
 
   // 1. Operational Metrics
   const closedCasos = allCasos.filter((c) => c.estadoInterno === 'Cerrado' && c.fechaInicio)
@@ -199,14 +213,36 @@ export async function getDashboardAnalytics(dateRange?: { from: Date; to: Date }
     concentration: await getParetoAnalytics(allCasos),
     momVolume,
     pareto,
-    mapData: allCasos.filter((c) => c.pais && COUNTRY_COORDS[c.pais]).map((c) => ({
-      id: c.id,
-      lat: (COUNTRY_COORDS[c.pais!] as [number, number])[0],
-      lng: (COUNTRY_COORDS[c.pais!] as [number, number])[1],
-      country: c.pais!,
-      cost: c.costoUsd || 0,
-      status: c.estadoCaso
-    }))
+    mapData: allCasos.filter((c) => c.pais && COUNTRY_COORDS[c.pais]).map((c, index) => {
+      const baseCoords = COUNTRY_COORDS[c.pais!] as [number, number]
+      const jitterX = ((c.id * 7) % 20 - 10) / 40 
+      const jitterY = ((c.id * 13) % 20 - 10) / 40 
+      
+      return {
+        id: c.id,
+        displayId: c.idCasoAssistravel,
+        lat: baseCoords[0] + jitterX,
+        lng: baseCoords[1] + jitterY,
+        country: c.pais!,
+        cost: c.costoUsd || 0,
+        status: c.estadoCaso
+      }
+    }),
+    allTimeMapData: allCasosGlobal.filter((c) => c.pais && COUNTRY_COORDS[c.pais]).map((c, index) => {
+      const baseCoords = COUNTRY_COORDS[c.pais!] as [number, number]
+      const jitterX = ((c.id * 7) % 20 - 10) / 40 
+      const jitterY = ((c.id * 13) % 20 - 10) / 40 
+      
+      return {
+        id: c.id,
+        displayId: c.idCasoAssistravel,
+        lat: baseCoords[0] + jitterX,
+        lng: baseCoords[1] + jitterY,
+        country: c.pais!,
+        cost: c.costoUsd || 0,
+        status: c.estadoCaso
+      }
+    })
   }
 }
 

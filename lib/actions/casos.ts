@@ -52,6 +52,7 @@ export async function createCaso(data: CasoFormData) {
     include: { corresponsal: true },
   })
   revalidatePath('/casos')
+  revalidatePath('/')
   return { success: true, data: caso }
 }
 
@@ -125,6 +126,7 @@ export async function updateCaso(id: number, data: CasoFormData) {
   }
 
   revalidatePath('/casos')
+  revalidatePath('/')
   return { success: true, data: caso }
 }
 
@@ -132,6 +134,7 @@ export async function deleteCaso(id: number) {
   await checkRole(['admin'])
   await prisma.caso.delete({ where: { id } })
   revalidatePath('/casos')
+  revalidatePath('/')
   return { success: true }
 }
 
@@ -147,6 +150,7 @@ export async function bulkUpdateEstadoInterno(ids: number[], estado: EstadoInter
   // For now, updateMany is faster for large sets.
   
   revalidatePath('/casos')
+  revalidatePath('/')
   return { success: true }
 }
 
@@ -158,5 +162,6 @@ export async function bulkDeleteCasos(ids: number[]) {
   })
 
   revalidatePath('/casos')
+  revalidatePath('/')
   return { success: true }
 }

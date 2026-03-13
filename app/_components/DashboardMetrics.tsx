@@ -107,7 +107,7 @@ export function DashboardMetrics({ stats, chartDataCorresponsales, chartDataEsta
         <div className="bg-card border border-border rounded-xl p-6 lg:col-span-2">
           <h3 className="text-lg font-bold text-foreground mb-6">Volumen por Corresponsal (USD)</h3>
           <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <BarChart data={chartDataCorresponsales} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.5} vertical={false} />
                 <XAxis dataKey="nombre" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
@@ -127,7 +127,7 @@ export function DashboardMetrics({ stats, chartDataCorresponsales, chartDataEsta
         <div className="bg-card border border-border rounded-xl p-6">
           <h3 className="text-lg font-bold text-foreground mb-6">Estados de Casos</h3>
           <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <PieChart>
                 <Pie
                   data={chartDataEstados}

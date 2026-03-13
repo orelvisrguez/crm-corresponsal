@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import { UserManagementTable } from './_components/UserManagementTable'
 import { AdminUsersHeader } from './_components/AdminUsersHeader'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminUsersPage() {
   const currentUser = await getCurrentUser()
 
